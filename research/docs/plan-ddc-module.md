@@ -489,8 +489,57 @@ MCCS says reads must not change state, so this needs a closer look before anythi
 F4 family; the module (`displays/aw3225qf.py`) does not record this yet [I]. Brightness, contrast, gains and black
 levels read the same awake and asleep.
 
-**Next:**
-1. A keep-awake option in the CLI (`scan --keep-awake`, or always on for `scan`). This run used a wrapper script.
-2. Find what moves F4: read F4 after each code in turn, read only.
-3. The preset comparison (T-DDC2b): BevelTipDrip changes one OSD setting at a time, and the scan is repeated after
-   each change.
+Next steps 1 and 2 were run the same evening: see the next section.
+
+## T-DDC2c: what moves F4, and `--keep-awake` (2026-11-19)
+
+BevelTipDrip: "Yes, do one and two. Make sure the monitor goes back to sleep when you're done." Read only: nothing
+was written to the monitor.
+
+**T-DDC2c, F4 hunt** (`data/ddc-t-ddc2c-f4-hunt-2026-11-19.csv`; every read is logged with its time). The display was
+woken and held on. D6 read 1 after 1.4 s. Then:
+- A: F4 and F5 read five times each, back to back. Values: 48/48, 16/16, 16/16, 48/(read failed), (failed)/48.
+- B: a capabilities request, then F4/F5. Both read 16.
+- C: every other code, 00-FF, read in turn, with F4 and F5 read after each one. Both read 16 throughout, more than
+  500 reads over 2 minutes, with no failed F4/F5 read.
+
+**Conclusion:**
+- Found: reading other codes does not move F4/F5, and neither does the capabilities request.
+- Found: F4/F5 read 48 in standby, and on the first read or reads after a pause. Once read repeatedly, they hold 16.
+- Found: settle time alone does not explain it. In the `--keep-awake` check below, F4 read 48 at 5.5 s after D6
+  read 1, on its only read.
+- Not known: whether reading F4 is what changes it.
+
+Until this is understood, treat a single F4/F5 read as unreliable: read it several times, and use the value it
+settles on.
+
+**`--keep-awake` and `--sleep-after`, built.** `ddc/power.py`; options on every command; 13 new tests in
+`tests/test_power.py`; 143 tests run, all OK (1 skipped).
+- `--keep-awake` does four things, in order:
+  1. wakes the display;
+  2. holds it on (`SetThreadExecutionState` with `ES_CONTINUOUS`);
+  3. polls D6 until it reads 1, for up to 20 s;
+  4. waits a further 5 s.
+
+  It releases the hold however the command ends. If D6 never reads 1, it warns and runs the command anyway.
+- `--sleep-after` turns the display off at the end with SC_MONITORPOWER, as Windows' idle timer does.
+- `scan` warns when D6 is not 1.
+- None of this is a DDC/CI write.
+
+**Two wake bugs found while building it:**
+1. A continuous `SetThreadExecutionState` on its own does not wake a display that is already off. The first real
+   try left the AW3225QF in standby for 20 s. A one-shot `ES_DISPLAY_REQUIRED` call does wake it; that is what
+   `display_power.py wake` relies on.
+2. Both `display_power.py` and the first `power.py` passed `SendInput` a 48-byte `INPUT` structure. Windows expects
+   40 bytes on 64-bit, so the call fails (it returns 0) and the mouse nudge never happened. `power.py` now uses the
+   correct size (`SendInput` returns 1). `display_power.py` belongs to feature/nearblack-tint and is not changed
+   here.
+
+**Run on the AW3225QF.** The display was put to sleep, and its standby (D6 4) confirmed. Then:
+`python -m ddc get D6 10 E2 F2 F4 F5 --monitor AW3225QF --keep-awake --sleep-after`
+- D6 read 1 after 0.5 s.
+- Values read: 10 = 35, E2 = 58, F2 = 585, F4/F5 = 48.
+- About 25 s later the monitor reported standby again (D6 4), the same delay as Windows' own display-off. It was
+  left asleep.
+
+**Next:** the preset comparison (T-DDC2b). It needs BevelTipDrip at the OSD. Run each scan with `--keep-awake`.

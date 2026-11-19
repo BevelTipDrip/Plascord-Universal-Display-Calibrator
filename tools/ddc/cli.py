@@ -4,6 +4,7 @@
     python -m ddc caps [--raw]                      # what the monitor says it supports
     python -m ddc get 10 12 6C                      # read VCP codes (hex): current and max
     python -m ddc scan --csv FILE --json FILE       # read every code 00-FF (read only), compare with caps
+    python -m ddc scan --keep-awake --sleep-after   # wake and hold the display on for the scan, then turn it off
     python -m ddc display --display aw3225qf        # what the AW3225QF display module knows (no monitor needed)
     python -m ddc set 6C 48                         # dry run: checks and prints, writes nothing
     python -m ddc set 6C 48 --yes                   # write, then read back (only with a person's go)
@@ -12,7 +13,10 @@
 Options on every command: --monitor TEXT (substring of the description or device) or --index N, needed when more
 than one monitor is connected; --backend auto|windows|fake (fake = an in-memory demo monitor, no hardware);
 --display auto|none|KEY (the display module, ddc/displays: names, value meanings, its own never codes; `set`
-always applies the never codes of the module the monitor's description matches).
+always applies the never codes of the module the monitor's description matches); --keep-awake (hold the display
+on for the command, wake it, wait until VCP D6 reads 1 (on) plus 5 s to settle; ddc/power.py) and --sleep-after
+(turn the display off when the command ends, as Windows' idle timer would). Waking and sleeping are not DDC/CI
+writes. `scan` warns when the monitor reports standby (D6 not 1): state codes then read standby values.
 
 Writing a DDC/CI value to a display needs a named person's explicit go first (research/docs/START-HERE.md, Rules).
 `set` writes only codes in the whitelist (ddc/safety.py) or named with --allow, never a code on the never-write
@@ -27,6 +31,7 @@ import sys
 from .backend import DdcError, open_backend, parse_vcp_code, vcp_name
 from . import displays
 from .caps import parse_capabilities
+from .power import POWER_ON, platform_power, wait_awake
 from .safety import DEFAULT_WRITE_WHITELIST, NEVER_WRITE, RestoreFailed, SafeDdc, WriteRefused
 from .scan import MIN_INTERVAL, scan, table, write_csv, write_json
 
@@ -55,6 +60,11 @@ def build_parser():
     common.add_argument("--display", default="auto", metavar="auto|none|KEY",
                         help="display module (ddc/displays): auto = found from the monitor's description or "
                              "capabilities model; none = MCCS names only; or a key, e.g. aw3225qf (default auto)")
+    common.add_argument("--keep-awake", action="store_true",
+                        help="hold the display on for the command: wake it, wait until VCP D6 reads 1 (on), then "
+                             "5 s to settle (standby values otherwise; Windows only)")
+    common.add_argument("--sleep-after", action="store_true",
+                        help="turn the display off when the command ends (Windows only)")
 
     ap = argparse.ArgumentParser(prog="python -m ddc", description="Read and (carefully) write monitor VCP codes "
                                  "over DDC/CI.", epilog="Writes need a person's go first: START-HERE.md, Rules.")
@@ -215,6 +225,11 @@ def _scan(be, args):
     if mod is not None:  # the module's names for the codes it knows (manufacturer codes above all)
         result = result._replace(rows=[r._replace(name=_name(r.code, mod)) for r in result.rows])
     print(table(result, args.all))
+    d6 = [r for r in result.rows if r.code == 0xD6 and r.replied]
+    if d6 and d6[0].current != POWER_ON:
+        print("WARNING power mode VCP D6 read %d, not 1 (on): the monitor was in standby during the scan, so state "
+              "codes (brightness, E2, F2, F4/F5 on the AW3225QF) read standby values; rerun with --keep-awake"
+              % d6[0].current)
     if mod is not None:
         print("Display module: %s (python -m ddc display --display %s)" % (mod.model, mod.key))
     if args.csv:
@@ -260,9 +275,26 @@ def _set(be, args):
 COMMANDS = {"list": _list, "caps": _caps, "get": _get, "scan": _scan, "display": _display, "set": _set}
 
 
-def main(argv=None, backend=None):
+def _awake(be, args, power):
+    """--keep-awake: wake the display, hold it on, then wait for VCP D6 = 1 and the settle time (read only)."""
+    if not power.supported:
+        print("WARNING --keep-awake / --sleep-after are Windows only for now; continuing without", file=sys.stderr)
+        return
+    power.wake()
+    power.hold()
+    if args.cmd in ("list", "display"):
+        return
+    try:
+        index = _pick(be, args)
+    except DdcError:
+        return  # the command itself reports it
+    wait_awake(be, index, log=lambda s: print(s, file=sys.stderr))
+
+
+def main(argv=None, backend=None, power=None):
     """argv: the arguments (default sys.argv[1:]). backend: use this backend instead of opening one (tests);
-    it is not closed here."""
+    it is not closed here. power: a ddc.power.Power (tests); default the platform's, used only with --keep-awake
+    or --sleep-after."""
     args = build_parser().parse_args(argv)
     if args.cmd == "display" and args.display not in ("auto", "none") and backend is None:
         return _display(None, args)  # a named module needs no monitor
@@ -271,7 +303,11 @@ def main(argv=None, backend=None):
     except DdcError as e:
         print("ERROR %s" % e, file=sys.stderr)
         return 1
+    if (args.keep_awake or args.sleep_after) and power is None:
+        power = platform_power()
     try:
+        if args.keep_awake:
+            _awake(be, args, power)
         return COMMANDS[args.cmd](be, args)
     except WriteRefused as e:
         print("REFUSED %s (nothing written)" % e, file=sys.stderr)
@@ -282,3 +318,10 @@ def main(argv=None, backend=None):
     finally:
         if backend is None:
             be.close()
+        if args.keep_awake and power.supported:
+            power.release()
+        if args.sleep_after:
+            if power.supported:
+                power.display_off()
+            else:
+                print("WARNING --sleep-after is Windows only for now", file=sys.stderr)

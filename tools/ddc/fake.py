@@ -71,6 +71,30 @@ class FakeBackend(Backend):
         self.waits.append(seconds)  # no real pause: there is no link to wait for
 
 
+class FakePower:
+    """ddc.power.Power for tests: logs hold / wake / release / display_off in `calls`; on_wake() runs on wake (e.g.
+    set a FakeMonitor's D6 to 1, as a real monitor leaving standby would)."""
+    supported = True
+
+    def __init__(self, on_wake=None):
+        self.calls = []  # type: List[str]
+        self.on_wake = on_wake
+
+    def hold(self):
+        self.calls.append("hold")
+
+    def release(self):
+        self.calls.append("release")
+
+    def wake(self):
+        self.calls.append("wake")
+        if self.on_wake:
+            self.on_wake()
+
+    def display_off(self):
+        self.calls.append("display_off")
+
+
 # What the AW3225QF reported on 2026-11-18 for the codes the probe writes (plan-nearblack-tint.md on
 # feature/nearblack-tint): gains 100 of 100, black levels 50 of 255. The rest are made-up but plausible.
 DEMO_VALUES = {0x10: (75, 100), 0x12: (75, 100), 0x14: (11, 12), 0x16: (100, 100), 0x18: (100, 100),

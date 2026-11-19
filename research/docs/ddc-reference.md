@@ -55,6 +55,9 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 | `RestoreFailed` | A write failed during restore | The values printed; set them in the OSD |
 | `scan`: a code replies 0 of 0 | Some monitors answer unsupported codes that way | Treat it as unsupported until a write test says otherwise |
 | `python -m ddc --backend fake scan`: "invalid choice: 'fake'" | Options go after the command | `python -m ddc scan --backend fake` |
+| D6 reads 4; brightness, E2, F2, F4/F5 read odd values (e.g. brightness 0, E2 0 or 4) | The monitor is in standby: DDC/CI still answers, with standby values | `--keep-awake` (T-DDC2, T-DDC2c in the plan) |
+| `--keep-awake`: "display not on after 20 s" | The wake did not reach the display (a locked session or another power policy) | `power.py` `wake`; read D6 by hand |
+| F4 / F5 read 48 once, then 16 | First read(s) after a pause read 48; not caused by reading other codes (T-DDC2c) | Read several times; use the settled value |
 | `scan`: every code fails | Display off (first row), or another program is talking DDC/CI | `list` first; close other DDC/CI tools (Dell Display Manager, Twinkle Tray) |
 
 ## 5. Things not to retry

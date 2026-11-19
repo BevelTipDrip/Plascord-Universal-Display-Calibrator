@@ -64,6 +64,7 @@ python -m ddc list                     # monitors DDC/CI can reach (--backend fa
 python -m ddc caps                     # the capabilities string, parsed (--raw as sent)
 python -m ddc get 10 12 16 18 1A 6C 6E 70
 python -m ddc scan --csv scan.csv      # read every code 00-FF (read only); hidden-setting candidates
+python -m ddc scan --keep-awake --sleep-after --csv scan.csv  # wake + hold the display on, then turn it off
 python -m ddc display --display aw3225qf  # what the AW3225QF module knows (no monitor needed)
 python -m ddc set 6C 48                # dry run: checks and prints, writes nothing
 python -m ddc set 6C 48 --yes          # writes a whitelisted code, reads back; only with a person's go
