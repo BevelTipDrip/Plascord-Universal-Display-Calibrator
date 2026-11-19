@@ -97,8 +97,10 @@ Alternatives considered:
    | 76 | Remote procedure call | Runs a vendor-defined procedure; effect unknown | Drafting agent, 2026-11-19 |
    | 78 | Display identification data (EDID) operation | Identification data; nothing in this project needs to touch it | Drafting agent, 2026-11-19 |
 
-   A display module can add its own never codes (the AW3225QF's: below, once written). Every row the drafting
-   agent added is for BevelTipDrip to review (open question 12).
+   A display module can add its own never codes (the AW3225QF's: E1, C8, C9;
+   [AW3225QF display module](#aw3225qf-display-module-skeleton)). No public source ties any VCP code to a
+   firmware update or a service/factory mode. Every row the drafting agent added is for BevelTipDrip to review
+   (open question 12).
 1. **Write whitelist.** Only codes in the whitelist are written. Default (`DEFAULT_WRITE_WHITELIST`): brightness
    10, contrast 12, gains 16 / 18 / 1A, black levels 6C / 6E / 70 (BevelTipDrip, 2026-11-19, Decisions). Any
    other code that is not on the never list is writable for one call only when the caller names it: the CLI's
@@ -142,6 +144,63 @@ neither ever overwrites a file.
 - Risks of reading [I]: on the AW3423DWF, constant DDC/CI polling made the OSD disappear (Twinkle Tray issue 536);
   one scan is 257 requests, not constant polling. Do not scan during a measurement run.
 - Run time on the AW3225QF: unknown; at 50 ms plus each read's own time, a few seconds to a minute or two.
+
+### AW3225QF display module (skeleton)
+
+Working assumption for open question 2 (the lead agent's, 2026-11-19): the core knows MCCS; per-display knowledge
+lives in `tools/ddc/displays/<model>.py`, Python data loaded by `displays.for_monitor(description, model)`. The
+first is `aw3225qf.py`: per code a name, what it does, value meanings, which OSD presets lock it, whether a
+capabilities string lists it, its source, whether it was confirmed on BevelTipDrip's monitor, and a safety class:
+
+| Class | Meaning | AW3225QF codes |
+|---|---|---|
+| safe | The core's default whitelist; `set ... --yes` (with a go) | 10 12 16 18 1A 6C 6E 70 |
+| ask first | Only with `--allow` and a go for that write | every other listed code, all unknown manufacturer codes |
+| never | Added to `NEVER_WRITE` for this monitor; nothing overrides it | 04 05 08 60 CA D6 (core), E1 (Dell power), C8 C9 (identification, firmware level) |
+
+A module can only add never codes; it cannot make a code writable (tests: `test_displays.py`). `get`, `caps` and
+`scan` print the module's names and value meanings; `set` applies the never codes of the module the monitor's
+description matches even with `--display none`. `python -m ddc display --display aw3225qf` prints the table
+without a monitor.
+
+**What is known about the AW3225QF's codes** (research 2026-11-19 by a sub-agent of the drafting agent, two
+sources re-checked by the drafting agent; web pages only, no personal data in queries, nothing on firmware):
+
+- **[V] BevelTipDrip's monitor, 2026-11-18** (probe reads, [plan-nearblack-tint.md](plan-nearblack-tint.md)):
+  16 / 18 / 1A read 100 of 100, 6C / 6E / 70 read 50 of 255. Only Custom Color HDR offers colour controls (hue and
+  saturation) in the OSD; the other HDR presets lock them (BevelTipDrip, 2026-11-18).
+- **Another person's AW3225QF** (ddcutil capabilities, MCCS 2.1, 2024-03-31,
+  [vdu_controls issue 84](https://github.com/digitaltrails/vdu_controls/issues/84); high confidence for that unit,
+  re-read by the drafting agent): lists 02 04 05 08 10 12 14 (01 05 08 0B 0C) 16 18 1A 52 60 (0F 11 12) 87 AC AE
+  B2 B6 C6 C8 C9 CA CC D6 DC DF and manufacturer codes E0 E1 E2 E3 E4 E5 E8 E9 EA EC F0 F1 F2 F4 F5 FE FD. **It
+  does not list 6C / 6E / 70**, which BevelTipDrip's monitor answered: if T-DDC2 shows the same on this unit, the
+  black levels are the first hidden settings found [I]. No 62 (volume), no E7 (Dell USB/KVM). Input 60 reads
+  0x0F0F for DisplayPort: use the low byte.
+- **AW3423DWF** (the closest Alienware QD-OLED; [aw3423dwf-tray VCP map](https://github.com/ykoval/aw3423dwf-tray/blob/main/VCP_MAP.md),
+  firmware M3B107; medium confidence, re-read by the drafting agent; from that model, not confirmed on this
+  monitor): **E2 reports the OSD preset** (writes ignored; HDR: Desktop 39, Movie HDR 35, Game HDR 36,
+  DisplayHDR 58, Custom Color HDR 255) - a read could tell the probe which preset is active; **F0** with 14
+  selects presets; **F2** reads 65 with HDR on, 0 off; **F4** is a command register (Dark Stabilizer: write 48+N
+  to set, write 63 then read to get), so Dark Stabilizer cannot be read without a write; **10 / 12 are stored
+  per preset**; the Peak 1000 toggle changed no polled code.
+- **Dell U / P models** (low to medium confidence; not confirmed on this monitor):
+  [ddccontrol-db U3421WE](https://raw.githubusercontent.com/ddccontrol/ddccontrol-db/master/db/monitor/DELA181.xml):
+  **E1 = power, inverted** (0 on, 1 off), E7 USB/KVM, E9 PiP/PbP (some modes change the EDID: Windows may
+  re-detect the display and drop its profile, Q-11); E8 PiP second input
+  ([U2723QE notes](https://gist.github.com/lainosantos/06d233f6c586305cde67489c2e4a764d)). E0 E3 E4 EA EC F1 F5
+  FD FE: meaning unknown anywhere found.
+- **Hidden / service / firmware**: no public source ties any VCP code to a firmware update, a service menu or a
+  factory mode on Dell or Alienware monitors; no VCP code is known to start the OLED panel refresh (Dell documents
+  it only in the OSD). Dell does not publish its manufacturer codes
+  ([Dell community](https://www.dell.com/community/Monitors/U3818DW-Please-publish-the-VCP-MCCS-codes/m-p/6188173)).
+  ddcutil warns that manufacturer features "may have irreversible consequences"
+  ([ddcutil-service man page](https://manpages.opensuse.org/Leap-16.0/ddcutil-service/ddcutil-service.1)): every
+  unknown E0-FF code is "ask first".
+- **Behaviour**: constant DDC/CI polling made an AW3423DWF's OSD disappear
+  ([Twinkle Tray 536](https://github.com/xanderfrangos/twinkle-tray/issues/536)); an AW3926QW dropped a Set right
+  after a probe ([ddcutil 626](https://github.com/rockowitz/ddcutil/issues/626)).
+- Not found: MonitorControl, ClickMonitorDDC and forum reports on AW3225QF codes; a raw AW3225QF capabilities
+  string (only ddcutil's parsed listing).
 
 ### How it is tested (project rule: every module brings its own tests)
 
@@ -196,6 +255,7 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 | D1b | Brightness 10 and contrast 12 writable by default; `--allow`; the never list; old value put back after a failed `set` | none | unit tests | built (this branch, 2026-11-19; commit in the card) |
 | D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, twice, below) |
 | D2b | Read-only discovery: `scan` of 00-FF, MCCS names | none | unit tests; T-DDC2 | built (unit tests, 2026-11-19); T-DDC2 not run |
+| D2c | AW3225QF display module (skeleton): codes, value meanings, preset locks, safety classes, sources | none | unit tests; T-DDC2 fills it in | built (unit tests, 2026-11-19); entries not confirmed on this monitor except 16 18 1A 6C 6E 70 |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC3 | not started (needs a go) |
 | D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | a probe `--ddc-steps` run | not started |
 | D5 | Linux backend | | unit tests on a fake I2C device; a Linux machine | not started |
@@ -243,8 +303,9 @@ Everything still under Open questions was assumed by a drafting agent (2026-11-1
 2. **Core library or display module (S4 sense)?** Still open: BevelTipDrip's answer (Decisions) set the goal,
    control of every setting over DDC/CI, hidden ones included, but not the layout. Working assumption (the lead
    agent's, 2026-11-19): a core library (it talks the MCCS protocol, the same on every monitor) plus a per-display
-   module for the AW3225QF (which codes do what, which presets lock them, safety classes). The change-map area is
-   `ddc`; alternatives: under `measurement`, or a `modules` area later (Q-12).
+   module for the AW3225QF (which codes do what, which presets lock them, safety classes); built that way as a
+   skeleton (`tools/ddc/displays/`). The change-map area is `ddc`; alternatives: under `measurement`, or a
+   `modules` area later (Q-12).
 3. **dxva2 directly or wrap winddcutil?** Assumed dxva2 through ctypes (what the probe already does; no install).
 4. **Linux: own I2C code or ddcutil?** Assumed: design only, decide when Linux starts (Q-14).
 5. ~~The write whitelist.~~ Answered: yes to 10 and 12, yes to codes beyond the list (Decisions).

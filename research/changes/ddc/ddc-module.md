@@ -9,8 +9,8 @@ owner: BevelTipDrip
 commits: e40689f
 prs:
 queue: Q-20
-files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
-symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main, MCCS_NAMES, WRITE_ONLY, mccs_name, scan, ScanRow, ScanResult, MIN_INTERVAL, write_csv, write_json
+files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/displays/__init__.py, tools/ddc/displays/aw3225qf.py, tools/ddc/tests/test_displays.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
+symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main, MCCS_NAMES, WRITE_ONLY, mccs_name, scan, ScanRow, ScanResult, MIN_INTERVAL, write_csv, write_json, DisplayModule, Control, for_monitor, by_key
 switches:
 tests:
 docs: plan-ddc-module.md#design, ddc-reference.md
@@ -31,7 +31,8 @@ back; `preserve(codes)` saves then restores on any exit; `restore(saved)` puts b
 `python -m ddc list | caps | get | scan | set` (from `tools/`); `set` is a dry run unless `--yes`, `--allow` widens
 the whitelist for one call, and a failed or mismatched write is put back. `scan` reads every code 00-FF, at least
 50 ms apart, against the capabilities string; codes that reply but are not listed are hidden-setting candidates.
-Names: MCCS 2.2a (`mccs.py`).
+Names: MCCS 2.2a (`mccs.py`). Per-model knowledge: `displays/` (AW3225QF skeleton: names, values, safety
+classes; its never codes join the core's).
 
 ## Invariants
 
@@ -50,6 +51,8 @@ Names: MCCS 2.2a (`mccs.py`).
   read just before.
 - `scan` calls only `capabilities` and `get_vcp`, calls `wait(>= MIN_INTERVAL)` before every read, and opens its
   CSV / JSON with mode `"x"` (never overwrites).
+- A display module only adds never codes (its `safe` set equals `DEFAULT_WRITE_WHITELIST`); `cli._set` applies
+  the never codes of the description-matched module whatever `--display` says.
 - `windows.py` touches no Windows API at import; `Dxva2Backend()` raises `DdcError` off Windows.
 - `error_text` passes dxva2's 0xC026xxxx codes to `FormatError` signed (unsigned raises OverflowError).
 
@@ -68,6 +71,7 @@ Names: MCCS 2.2a (`mccs.py`).
   built, 82 run, 0 failures, 1 skipped (Python 3.8.10, Windows). Fake backend only.
 - 2026-11-19: `scan`, MCCS names: built, 105 run, 0 failures, 1 skipped (Python 3.8.10 and 3.14, Windows), fake
   backend only.
+- 2026-11-19: display modules: built, 124 run, 0 failures, 1 skipped (3.8.10, 3.14), fake backend only.
 - Not run against a monitor: on 2026-11-19 the AW3225QF was not reachable (`list` found only `WinDisc`,
   error 0xC02625E5). No write has been sent to any real display.
 
