@@ -1,0 +1,33 @@
+name: Bug report
+description: Something does not work.
+labels: [bug, triage]
+body:
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What you saw, and where.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: textarea
+    id: system
+    attributes:
+      label: Version and system
+      description: Version or commit, OS, anything else that matters.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant lines. Remove anything private (names, paths, tokens).
+      render: shell

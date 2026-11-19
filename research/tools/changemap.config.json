@@ -1,0 +1,47 @@
+{
+  "_help": "Settings for changemap.py. Keys starting with _ are ignored. Fill in during setup (BOOTSTRAP.md step 4).",
+
+  "_base_ref": "Only commits after this ref count (e.g. upstream/main for a fork, or the commit where the project adopted this template). Empty = all history.",
+  "base_ref": "",
+
+  "_upstream_ref": "Optional. Switches that also exist in this ref are upstream's and need no card.",
+  "upstream_ref": "",
+
+  "_branches": "Every code commit reachable from these needs a card (reported by check, not an error). origin/<name> is used when the local branch is missing.",
+  "branches": ["main"],
+
+  "_code_paths": "Path prefixes that count as code. A commit touching them is a code commit.",
+  "code_paths": ["tools"],
+
+  "_skip_paths": "Prefixes inside code_paths to ignore (vendored or generated code).",
+  "skip_paths": ["tools/argyll/"],
+
+  "_switch_patterns": "Python regexes that find switch names (env vars, config keys, feature flags) in the code. Group 1 is the name if the pattern has a group. Empty = no switch checks. Example: \"\\\"(MYAPP_[A-Z0-9_]+)\\\"\" finds string literals like \"MYAPP_FAST_PATH\".",
+  "switch_patterns": [],
+
+  "_default_keys": "Front-matter keys giving a card's default (on / off / n/a / mixed). One key, or one per platform or environment, e.g. [\"default_windows\", \"default_linux\"].",
+  "default_keys": ["default"],
+
+  "_areas": "The card folders under research/changes/. One line each: what code belongs there.",
+  "areas": {
+    "measurement": "meter readings and measurement runs: tools/nearblack_probe.py (spotread driver, averaging, sweeps, DDC/CI), tools/display_power.py",
+    "patchgen": "test-patch generators that put exact signal values on screen: tools/hdrgen/ (native HDR10 swapchain, Windows/D3D11)",
+    "profiles": "corrections built from measurements and how they are installed: tools/build_mhc2.py (Windows MHC2 LUT profiles), tools/set_hdr_profile.py",
+    "tooling": "research tools, diagnostics, CI, build scripts (no product behaviour)"
+  },
+
+  "_test_id_patterns": "Python regexes for test IDs in doc headings (see conventions.md, Test IDs).",
+  "test_id_patterns": ["\\bT-[A-Za-z0-9][A-Za-z0-9.]*(?:-[A-Za-z0-9.]+)*"],
+
+  "_link_check": "Files and folders whose relative markdown links check verifies.",
+  "link_check": ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "research/docs", "research/changes", "research/branches", ".claude/skills"],
+
+  "_remote": "The shared remote whose branches 'changemap.py branches' reads.",
+  "remote": "origin",
+
+  "_branch_docs_exempt": "Branch name patterns that need no reference file in research/branches/ (the main branches never do).",
+  "branch_docs_exempt": ["docs/*", "dependabot/*"],
+
+  "_queue_stale_days": "changemap.py queue flags a Now row whose branch has had no commits for this many days.",
+  "queue_stale_days": 7
+}

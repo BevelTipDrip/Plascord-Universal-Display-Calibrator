@@ -1,0 +1,21 @@
+name: docs-check
+
+# Keeps the change map and the docs true for everyone: cards name real files, symbols, switches, commits and
+# anchors; relative links resolve; INDEX.md and TESTS.md are up to date. See research/changes/README.md.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  changemap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: changemap.py check
+        run: python research/tools/changemap.py check

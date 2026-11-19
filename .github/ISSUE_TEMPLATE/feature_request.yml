@@ -1,0 +1,21 @@
+name: Feature request
+description: Something new, or a change to how something works.
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you need
+      description: The problem or goal, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: How it could work, if you have one.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Who it is for, what it affects, links.
