@@ -24,6 +24,12 @@ When an item is acted on, do not delete it: add its outcome in bold with the sta
 
 ## Traps for future changes
 
+- **Two copies of the DDC/CI code until the probe adopts `tools/ddc/`.** `tools/nearblack_probe.py` (on
+  `feature/nearblack-tint`) keeps its own `open_monitor` / `vcp_set` / `DDC_VCPS`: no `argtypes` on the dxva2
+  calls, the read back after a write printed but not compared, and the other monitors' physical handles never
+  destroyed [inferred from code, not tested]. A change to the write whitelist or the safety rules must go in both
+  until plan-ddc-module.md stage D4. Cards: nearblack-probe, ddc-module.
+
 - **The `run` column in the moved CSVs holds the old labels** (e.g. `tb400_fix_v2_verify`), not the test IDs in the
   file names (`research/docs/data/nearblack-t-nb9-...`). Files are byte for byte; go by the file name.
 

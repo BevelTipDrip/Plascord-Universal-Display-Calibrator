@@ -39,11 +39,14 @@ later, agreed with its owner); any write to a real display.
 
 ## State
 
-Branch and queue row created. Last updated 2026-11-19 by Claude (for BevelTipDrip).
+Package built `e40689f` (D1): 62 unit tests pass on the fake backend (Python 3.8, 3.10, 3.14). Not run on a
+monitor: the AW3225QF was not reachable on 2026-11-19. Nothing written to any display. Waiting on BevelTipDrip's
+review and the open questions in the plan. Last updated 2026-11-19 by Claude (for BevelTipDrip).
 
 ## Conflicts with other branches
 
-Checked 2026-11-19 with `changemap.py branches`.
+Checked 2026-11-19 with `changemap.py branches` (twice: at the start and at the handoff; the trial merge at the
+handoff showed conflicts in `START-HERE.md` and `plan-work-queue.md`, both rows added side by side).
 
 | Branch | Owner | Overlap (files, areas, interfaces) | Plan | Agreed with |
 |---|---|---|---|---|
@@ -58,3 +61,5 @@ both sides). Merging needs BevelTipDrip's review and go.
 ## Log
 
 - 2026-11-19 Claude (for BevelTipDrip): started from main @ 1b1783f.
+- 2026-11-19 Claude: plan doc `808dd43`; package, tests, card, ddc area, CI workflow `e40689f`; read-only check
+  on the real monitor not possible (only `WinDisc`). Handoff: handoff-2026-11-19-ddc-module.md.

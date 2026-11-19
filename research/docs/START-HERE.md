@@ -94,7 +94,7 @@ BevelTipDrip.
 - **Platforms:** Windows today; code that is not inherently platform-specific should not assume Windows, so Linux
   can follow.
 
-## Current state (last updated 2026-11-18 by BevelTipDrip, with Claude)
+## Current state (last updated 2026-11-19 by Claude, for BevelTipDrip)
 
 The state of each area today, one row each, with links. Details live in the linked docs and cards.
 
@@ -104,6 +104,7 @@ The state of each area today, one row each, with links. Details live in the link
 | Toolchain | Windows 11, Python 3.8.10, VS 2026 Build Tools, ArgyllCMS 3.5.0, ColorMunki Display ([building-and-tools.md](building-and-tools.md)) |
 | Build | `tools/hdrgen/build.ps1` builds the patch generator; the Python tools need no build |
 | measurement | `tools/nearblack_probe.py` run: 9 HDR test runs on the AW3225QF (T-NB1 to T-NB9). SDR not measured yet (Q-7). Card [nearblack-probe](../changes/measurement/nearblack-probe.md) |
+| ddc | `tools/ddc/` built on `feature/ddc-module` (Q-20): DDC/CI package, 62 unit tests pass on a fake backend; not run on a monitor, nothing written to a display. Open questions for BevelTipDrip in [plan-ddc-module.md](plan-ddc-module.md#open-questions-for-beveltipdrip). Card [ddc-module](../changes/ddc/ddc-module.md) |
 | patchgen | HDR10 generator (Windows, D3D11) run in every HDR test. No Linux / Vulkan generator yet (Q-14). Card [hdr10-patchgen](../changes/patchgen/hdr10-patchgen.md) |
 | profiles | AW3225QF True Black 400 v2 profile run: within 7% of target from 0.075 to 20 nits (T-NB9). Peak 1000 profile is v1 (no snapping, coarse data; Q-2). Near-black tint not corrected (Q-1). [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Next | The work queue's Now and Next: `changemap.py queue` ([plan-work-queue.md](plan-work-queue.md)). |
@@ -123,6 +124,7 @@ The state of each area today, one row each, with links. Details live in the link
 | [patchgen-reference.md](patchgen-reference.md) | Patch generator area: HDR10 swapchain, what makes a patch a true signal value |
 | [profiles-reference.md](profiles-reference.md) | Profiles area: MHC2 format, how Windows applies it, GPU truncation, things not to retry |
 | [handoff-2026-11-18-setup.md](handoff-2026-11-18-setup.md) | Handoff: project set up from the docs template |
+| [handoff-2026-11-19-ddc-module.md](handoff-2026-11-19-ddc-module.md) | Handoff: DDC/CI package groundwork (Q-20), open questions for BevelTipDrip |
 | [conventions.md](conventions.md) | The documentation standard: doc types, names, status words, evidence, test IDs, commits |
 | [building-and-tools.md](building-and-tools.md) | Toolchain, build, run, test, debug, paths, traps |
 | [repo-boundaries.md](repo-boundaries.md) | Remotes, branches, merge method, what may be committed, read-only references |
