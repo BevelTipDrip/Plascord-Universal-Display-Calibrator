@@ -116,7 +116,7 @@ The state of each area today, one row each, with links. Details live in the link
 | [plan-work-queue.md](plan-work-queue.md) | **The work queue:** all planned work as `Q-<n>` rows, Now / Next / Later, owners, branches, states ([done and dropped](plan-work-queue-done.md)) |
 | [../branches/README.md](../branches/README.md) | **Branch reference files:** one per in-progress branch, on that branch; `changemap.py branches` reads them all |
 | [plan-roadmap.md](plan-roadmap.md) | Goals, stages, Progress table |
-| [plan-nearblack-tint.md](plan-nearblack-tint.md) | Near-black blue/purple tint: per-channel LUT plan (Q-1), test write-ups T-NT* |
+| [plan-nearblack-tint.md](plan-nearblack-tint.md) | Grey scale to D65 at every level: magenta lean and near-black shift (Q-1), test write-ups T-NT* |
 | [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) | AW3225QF HDR near-black correction (MHC2 LUT): findings, design, test write-ups T-NB1 to T-NB9 |
 | [measurement-reference.md](measurement-reference.md) | Measurement area: meter, probe, the setup that must hold before a run, things not to retry |
 | [patchgen-reference.md](patchgen-reference.md) | Patch generator area: HDR10 swapchain, what makes a patch a true signal value |

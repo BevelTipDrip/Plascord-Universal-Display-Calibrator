@@ -24,7 +24,7 @@ after every run, and a run that drifts more than 5% is invalid. A stage is verif
 
 1. **S1 AW3225QF HDR near-black LUT**: per-preset MHC2 profiles that correct the raised near-black luminance
    ([plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md); Q-2, Q-3, Q-4, Q-5).
-2. **S2 Near-black colour shift**: per-channel correction of the blue/purple tint near black (Q-1).
+2. **S2 Grey scale to D65**: the whole-scale magenta lean and the near-black blue/purple shift (Q-1).
 3. **S3 SDR and the SDR-in-HDR curve**: SDR measurement, DDC/CI black level, optional sRGB-to-2.2 profile
    (Q-6, Q-7, Q-8).
 4. **S4 Module architecture**: a core (meter, patches, measurement runs, correction builders) and modules for
@@ -42,7 +42,7 @@ States: `not started` / `in progress` / `built` / `run` / `verified` (who). PR c
 |---|---|---|---|---|
 | S0 Repo and docs | built | | | Set up from the docs template 2026-11-18 |
 | S1 AW3225QF HDR near-black LUT | run | | | True Black 400 v2 profile within 7% of target, 0.075-20 nits (T-NB9); Peak 1000 still v1 |
-| S2 Near-black colour shift | not started | | | |
+| S2 Grey scale to D65 | in progress | | | |
 | S3 SDR | not started | | | |
 | S4 Module architecture | not started | | | |
 | S5 MCP server | not started | | | |
