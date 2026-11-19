@@ -163,9 +163,14 @@ def mluc(text):
     return b"mluc" + b"\0" * 4 + struct.pack(">II", 1, 12) + b"enUS" + struct.pack(">II", len(s), 28) + s
 
 
-def mhc2(old, lut, peak):
+IDENTITY_MATRIX = b"".join(s15f16(v) for v in (1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0))  # 3x4: no colour change
+
+
+def mhc2(old, lut, peak, neutral=False):
+    """The MHC2 tag with new LUTs (the same on all three channels); the base's matrix, or identity if `neutral`
+    (the Windows HDR Calibration matrix carries that app's saturation setting)."""
     _, _, size, minL, oldpeak, moff, *_ = struct.unpack_from(">4s4sIiiIIII", old)
-    matrix = old[moff:moff + 48]
+    matrix = IDENTITY_MATRIX if neutral else old[moff:moff + 48]
     if peak is None:
         peak = oldpeak / 65536
     hdr_len, mat_len = 36, 48
@@ -213,7 +218,12 @@ def write_icc(header, tags, path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--csv", required=True, help="nearblack_probe.py HDR CSV (dense run preferred)")
+    ap.add_argument("--csv", help="nearblack_probe.py HDR CSV (dense run preferred)")
+    ap.add_argument("--identity-lut", action="store_true",
+                    help="no correction: a 2-entry identity LUT, as Windows' HDR Calibration profiles have (with "
+                         "--neutral: a profile that changes nothing, for measuring)")
+    ap.add_argument("--neutral", action="store_true",
+                    help="identity matrix instead of the base profile's (which carries its saturation setting)")
     ap.add_argument("--name", required=True, help="profile description (shown in Windows Settings)")
     ap.add_argument("--base", default=DEFAULT_BASE, help="HDR profile to copy matrix / tags from")
     ap.add_argument("--peak", type=float, help="peak luminance to report (default: the base profile's)")
@@ -224,19 +234,25 @@ def main():
                     help="keep fractional output codes (the GPU truncates them; snapping is the default)")
     ap.add_argument("--out", help="output .icc (default: ../profiles/<name>.icc)")
     args = ap.parse_args()
+    if bool(args.csv) == args.identity_lut:
+        ap.error("give either --csv (a correction) or --identity-lut (none)")
 
-    pts = load_response(args.csv, args.floor)
-    resp = Response(pts)
-    print(f"Response: {len(pts)} codes, {pts[0][0]}..{pts[-1][0]} ({pts[0][1]:.4f}..{pts[-1][1]:.1f} cd/m2)")
-    lut = build_lut(resp, args.blend_start, args.blend_end)
-    if not args.no_snap:
-        lut = snap_lut(lut, resp, args.blend_start)
+    resp = None
+    if args.identity_lut:
+        lut = [0.0, 1.0]
+    else:
+        pts = load_response(args.csv, args.floor)
+        resp = Response(pts)
+        print(f"Response: {len(pts)} codes, {pts[0][0]}..{pts[-1][0]} ({pts[0][1]:.4f}..{pts[-1][1]:.1f} cd/m2)")
+        lut = build_lut(resp, args.blend_start, args.blend_end)
+        if not args.no_snap:
+            lut = snap_lut(lut, resp, args.blend_start)
 
     header, tags = read_icc(args.base)
     new_tags, peak = [], None
     for sig, data, off in tags:
         if sig == b"MHC2":
-            data, peak = mhc2(data, lut, args.peak)
+            data, peak = mhc2(data, lut, args.peak, args.neutral)
         elif sig == b"desc":
             data, off = mluc(args.name), "desc"
         elif sig == b"lumi" and args.peak:
@@ -246,7 +262,10 @@ def main():
                                                     args.name + ".icc"))
     os.makedirs(os.path.dirname(out), exist_ok=True)
     write_icc(header, new_tags, out)
-    print(f"Wrote {out}  (peak {peak:.0f} nits, LUT {N} entries)")
+    print(f"Wrote {out}  (peak {peak:.0f} nits, LUT {len(lut)} entries, "
+          f"{'identity' if args.neutral else 'base profile'} matrix)")
+    if resp is None:
+        return
 
     print(f"\n{'in code':>7} {'target':>9} {'uncorrected':>11} {'out code':>8} {'predicted':>9}")
     for c in (20, 27, 31, 35, 40, 47, 56, 64, 75, 85, 99, 120, 153, 193, 254, 307, 365, 402, 520):

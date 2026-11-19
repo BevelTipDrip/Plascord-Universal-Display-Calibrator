@@ -6,7 +6,7 @@ status: active
 default: n/a
 origin: ours
 owner: BevelTipDrip
-commits: c491027
+commits: c491027, a63d1d1
 prs:
 queue: Q-14
 files: tools/hdrgen/hdr10_patchgen.cpp, tools/hdrgen/build.ps1

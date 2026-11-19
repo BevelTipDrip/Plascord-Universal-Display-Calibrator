@@ -18,6 +18,10 @@ When an item is acted on, do not delete it: add its outcome in bold with the sta
 
 - **`build_mhc2.py` defaults `--base` to a file on one machine** (`DEFAULT_BASE`); anyone else gets a
   FileNotFoundError until they pass `--base`. Card: mhc2-lut.
+- **The identity part of a corrected LUT stores exactly `i/1023`** (`build_lut` above `--blend-end`), and the
+  pipeline truncates LUT output (T-NB7). If the s15.16 value lands a hair under, that input goes out one code low
+  (about 1% above 30 nits). Not seen clearly in T-NB9 (30-100 nits matched the uncorrected panel within 2%) [I].
+  Storing `(i + 0.25)/1023` as `snap_lut` does would rule it out. Cards: mhc2-lut, lut-snap.
 - **`Response.__call__` clamps outside the measured codes** (returns the end values), so `snap_lut` compares
   against flat light there. Harmless while snapping stops above `--blend-start`; a trap if that range grows.
   Cards: mhc2-lut, lut-snap.

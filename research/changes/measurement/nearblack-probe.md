@@ -6,7 +6,7 @@ status: active
 default: n/a
 origin: ours (averaging rule from HCFR, arthur-liberman/hcfr-code ArgyllMeterWrapper.cpp)
 owner: BevelTipDrip
-commits: c491027, 6feab98
+commits: c491027, 6feab98, a63d1d1
 prs:
 queue: Q-1, Q-6, Q-7, Q-9
 files: tools/nearblack_probe.py

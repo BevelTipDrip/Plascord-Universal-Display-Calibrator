@@ -110,6 +110,12 @@ Alternatives considered:
   The probe's `--ddc-steps` stays for later tests (Q-6).
 - Calibrate **True Black 400**; Peak 1000 dropped for now (BevelTipDrip, 2026-11-18: "true black 400 is the one to
   use" and "we will drop it for now at least, the correct mode for the monitor is a well calibrated HDR400").
+- **Two final profiles**: one keeping the Windows HDR Calibration matrix (its saturation boost), one neutral
+  (identity matrix) (BevelTipDrip, 2026-11-18: "we'll make two profiles, one with saturation, one neutral").
+  Measurements use a neutral profile with identity LUT: `profiles/AW3225QF neutral (identity, for measuring).icc`
+  (`build_mhc2.py --identity-lut --neutral`). BevelTipDrip stopped the first identity check because the active
+  profile was an HDR Calibration one: "which is not necessarilly neutral (I believe saturation is turned up on all
+  of those)". Grey patches are unaffected by that matrix (it maps D65 to D65), the search's off-grey patches are not.
 - Target **D65 (0.3127/0.3290) at every level** of the grey scale, not the panel's own grey (BevelTipDrip,
   2026-11-18: "we should probably fix that and target d65").
 - A little luminance error near black is acceptable to get the colour right; prefer a step slightly too dark over
