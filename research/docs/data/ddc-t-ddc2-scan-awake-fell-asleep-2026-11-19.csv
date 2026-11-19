@@ -1,0 +1,257 @@
+vcp,name,replied,vcp_type,current,maximum,in_caps,caps_values,hidden,note,error
+00,code page,False,,,,False,,False,,VCP 00 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+01,degauss,False,,,,False,,False,write-only in MCCS,VCP 01 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+02,new control value,True,0,2,2,True,,False,,
+03,soft controls,True,1,2,255,False,,True,"hidden: replies, not in caps",
+04,restore factory defaults,True,0,0,255,True,,False,write-only in MCCS,
+05,restore factory brightness/contrast,True,0,0,1,True,,False,write-only in MCCS,
+06,restore factory geometry,True,0,0,255,False,,True,"hidden: replies, not in caps; write-only in MCCS",
+07,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 07 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+08,restore factory colour,True,0,0,255,True,,False,write-only in MCCS,
+09,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 09 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+0A,restore factory TV defaults,False,,,,False,,False,write-only in MCCS,VCP 0A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+0B,colour temperature increment,True,0,0,24028,False,,True,"hidden: replies, not in caps",
+0C,colour temperature request,True,0,2,255,False,,True,"hidden: replies, not in caps",
+0D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 0D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+0E,clock,True,1,50,100,False,,True,"hidden: replies, not in caps",
+0F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 0F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+10,brightness,True,1,35,100,True,,False,,
+11,flesh tone enhancement,False,,,,False,,False,,VCP 11 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+12,contrast,True,1,75,100,True,,False,,
+13,backlight control (deprecated),False,,,,False,,False,,VCP 13 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+14,colour preset,True,1,5,12,True,01 05 08 0B 0C,False,,
+15,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 15 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+16,red gain,True,1,100,100,True,,False,,
+17,user colour vision compensation,False,,,,False,,False,,VCP 17 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+18,green gain,True,1,100,100,True,,False,,
+19,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 19 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+1A,blue gain,True,1,100,100,True,,False,,
+1B,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 1B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+1C,focus,False,,,,False,,False,,VCP 1C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+1D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 1D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+1E,auto setup,True,0,0,2,False,,True,"hidden: replies, not in caps",
+1F,auto colour setup,False,,,,False,,False,,VCP 1F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+20,horizontal position (phase),True,1,0,100,False,,True,"hidden: replies, not in caps",
+21,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 21 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+22,horizontal size,False,,,,False,,False,,VCP 22 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+23,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 23 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+24,horizontal pincushion,False,,,,False,,False,,VCP 24 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+25,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 25 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+26,horizontal pincushion balance,False,,,,False,,False,,VCP 26 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+27,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 27 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+28,horizontal convergence R/B,False,,,,False,,False,,VCP 28 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+29,horizontal convergence M/G,False,,,,False,,False,,VCP 29 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2A,horizontal linearity,False,,,,False,,False,,VCP 2A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2B,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 2B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2C,horizontal linearity balance,False,,,,False,,False,,VCP 2C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 2D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2E,grey scale expansion,False,,,,False,,False,,VCP 2E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+2F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 2F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+30,vertical position (phase),True,1,0,100,False,,True,"hidden: replies, not in caps",
+31,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 31 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+32,vertical size,False,,,,False,,False,,VCP 32 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+33,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 33 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+34,vertical pincushion,False,,,,False,,False,,VCP 34 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+35,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 35 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+36,vertical pincushion balance,False,,,,False,,False,,VCP 36 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+37,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 37 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+38,vertical convergence R/B,False,,,,False,,False,,VCP 38 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+39,vertical convergence M/G,False,,,,False,,False,,VCP 39 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+3A,vertical linearity,False,,,,False,,False,,VCP 3A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+3B,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 3B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+3C,vertical linearity balance,False,,,,False,,False,,VCP 3C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+3D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 3D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+3E,clock phase,True,1,50,100,False,,True,"hidden: replies, not in caps",
+3F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 3F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+40,horizontal parallelogram,False,,,,False,,False,,VCP 40 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+41,vertical parallelogram,False,,,,False,,False,,VCP 41 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+42,horizontal keystone (trapezoid),False,,,,False,,False,,VCP 42 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+43,vertical keystone (trapezoid),False,,,,False,,False,,VCP 43 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+44,rotation,False,,,,False,,False,,VCP 44 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+45,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 45 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+46,top corner flare,False,,,,False,,False,,VCP 46 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+47,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 47 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+48,top corner hook,False,,,,False,,False,,VCP 48 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+49,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 49 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4A,bottom corner flare,False,,,,False,,False,,VCP 4A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4B,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 4B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4C,bottom corner hook,False,,,,False,,False,,VCP 4C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 4D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4E,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 4E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+4F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 4F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+50,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 50 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+51,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 51 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+52,active control,True,0,16,255,True,,False,,
+53,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 53 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+54,performance preservation,False,,,,False,,False,,VCP 54 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+55,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 55 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+56,horizontal moire,False,,,,False,,False,,VCP 56 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+57,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 57 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+58,vertical moire,False,,,,False,,False,,VCP 58 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+59,6-axis saturation: red,False,,,,False,,False,,VCP 59 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5A,6-axis saturation: yellow,False,,,,False,,False,,VCP 5A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5B,6-axis saturation: green,False,,,,False,,False,,VCP 5B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5C,6-axis saturation: cyan,False,,,,False,,False,,VCP 5C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5D,6-axis saturation: blue,False,,,,False,,False,,VCP 5D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5E,6-axis saturation: magenta,False,,,,False,,False,,VCP 5E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+5F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 5F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+60,input source,True,1,3855,14,True,0F 11 12,False,,
+61,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 61 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+62,audio speaker volume,True,1,50,100,False,,True,"hidden: replies, not in caps",
+63,speaker select,False,,,,False,,False,,VCP 63 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+64,audio microphone volume,False,,,,False,,False,,VCP 64 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+65,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 65 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+66,ambient light sensor,False,,,,False,,False,,VCP 66 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+67,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 67 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+68,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 68 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+69,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 69 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+6A,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 6A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+6B,backlight level: white,False,,,,False,,False,,VCP 6B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+6C,red black level,True,1,50,255,False,,True,"hidden: replies, not in caps",
+6D,backlight level: red,False,,,,False,,False,,VCP 6D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+6E,green black level,True,1,50,255,False,,True,"hidden: replies, not in caps",
+6F,backlight level: green,False,,,,False,,False,,VCP 6F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+70,blue black level,True,1,50,255,False,,True,"hidden: replies, not in caps",
+71,backlight level: blue,False,,,,False,,False,,VCP 71 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+72,gamma,False,,,,False,,False,,VCP 72 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+73,LUT size,False,,,,False,,False,,VCP 73 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+74,single point LUT operation,False,,,,False,,False,,VCP 74 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+75,block LUT operation,False,,,,False,,False,,VCP 75 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+76,remote procedure call,False,,,,False,,False,,VCP 76 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+77,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 77 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+78,display identification data operation (EDID),False,,,,False,,False,,VCP 78 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+79,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 79 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7A,adjust focal plane,False,,,,False,,False,,VCP 7A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7B,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 7B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7C,adjust zoom,False,,,,False,,False,,VCP 7C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7D,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 7D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7E,trapezoid,False,,,,False,,False,,VCP 7E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+7F,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 7F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+80,keystone,False,,,,False,,False,,VCP 80 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+81,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 81 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+82,horizontal mirror (flip),False,,,,False,,False,,VCP 82 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+83,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 83 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+84,vertical mirror (flip),False,,,,False,,False,,VCP 84 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+85,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 85 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+86,display scaling,False,,,,False,,False,,VCP 86 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+87,sharpness,True,1,50,100,True,,False,,
+88,velocity scan modulation,False,,,,False,,False,,VCP 88 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+89,not defined in MCCS 2.2a,False,,,,False,,False,,VCP 89 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8A,colour saturation,False,,,,False,,False,,VCP 8A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8B,TV channel up/down,False,,,,False,,False,,VCP 8B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8C,TV sharpness,False,,,,False,,False,,VCP 8C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8D,audio mute / screen blank,False,,,,False,,False,,VCP 8D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8E,TV contrast,False,,,,False,,False,,VCP 8E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+8F,audio treble,False,,,,False,,False,,VCP 8F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+90,hue,False,,,,False,,False,,VCP 90 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+91,audio bass,False,,,,False,,False,,VCP 91 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+92,TV black level / luminance,False,,,,False,,False,,VCP 92 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+93,audio balance L/R,False,,,,False,,False,,VCP 93 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+94,audio processor mode,False,,,,False,,False,,VCP 94 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+95,window position (top left X),False,,,,False,,False,,VCP 95 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+96,window position (top left Y),False,,,,False,,False,,VCP 96 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+97,window position (bottom right X),False,,,,False,,False,,VCP 97 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+98,window position (bottom right Y),False,,,,False,,False,,VCP 98 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+99,window control on/off,False,,,,False,,False,,VCP 99 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9A,window background,False,,,,False,,False,,VCP 9A read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9B,6-axis hue: red,False,,,,False,,False,,VCP 9B read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9C,6-axis hue: yellow,False,,,,False,,False,,VCP 9C read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9D,6-axis hue: green,False,,,,False,,False,,VCP 9D read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9E,6-axis hue: cyan,False,,,,False,,False,,VCP 9E read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+9F,6-axis hue: blue,False,,,,False,,False,,VCP 9F read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A0,6-axis hue: magenta,False,,,,False,,False,,VCP A0 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A1,not defined in MCCS 2.2a,False,,,,False,,False,,VCP A1 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A2,auto setup on/off,False,,,,False,,False,,VCP A2 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A3,not defined in MCCS 2.2a,False,,,,False,,False,,VCP A3 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A4,window mask control,False,,,,False,,False,,VCP A4 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A5,change the selected window,False,,,,False,,False,,VCP A5 read failed on monitor 0 (Windows error 0xC0262589: An operation failed because a DDC/CI message had an invalid value in its command field.)
+A6,not defined in MCCS 2.2a,False,,,,False,,False,,VCP A6 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A7,not defined in MCCS 2.2a,False,,,,False,,False,,VCP A7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+A8,not defined in MCCS 2.2a,True,0,0,3,False,,True,"hidden: replies, not in caps",
+A9,not defined in MCCS 2.2a,False,,,,False,,False,,VCP A9 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+AA,screen orientation,False,,,,False,,False,,VCP AA read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+AB,not defined in MCCS 2.2a,False,,,,False,,False,,VCP AB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+AC,horizontal frequency,True,0,47112,8,True,,False,,
+AD,not defined in MCCS 2.2a,False,,,,False,,False,,VCP AD read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+AE,vertical frequency,True,0,23524,0,True,,False,,
+AF,not defined in MCCS 2.2a,False,,,,False,,False,,VCP AF read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B0,settings (store / restore),False,,,,False,,False,,VCP B0 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B1,not defined in MCCS 2.2a,False,,,,False,,False,,VCP B1 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B2,flat panel sub-pixel layout,True,0,1,8,True,,False,,
+B3,not defined in MCCS 2.2a,False,,,,False,,False,,VCP B3 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B4,source timing mode,True,0,1,2,False,,True,"hidden: replies, not in caps",
+B5,not defined in MCCS 2.2a,False,,,,False,,False,,VCP B5 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B6,display technology type,True,0,6,5,True,,False,,
+B7,monitor status,False,,,,False,,False,,VCP B7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B8,packet count,False,,,,False,,False,,VCP B8 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+B9,monitor X origin,False,,,,False,,False,,VCP B9 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BA,monitor Y origin,False,,,,False,,False,,VCP BA read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BB,header error count,False,,,,False,,False,,VCP BB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BC,body CRC error count,False,,,,False,,False,,VCP BC read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BD,client ID,False,,,,False,,False,,VCP BD read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BE,link control,False,,,,False,,False,,VCP BE read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+BF,not defined in MCCS 2.2a,False,,,,False,,False,,VCP BF read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C0,display usage time,True,0,2359,65535,False,,True,"hidden: replies, not in caps",
+C1,not defined in MCCS 2.2a,False,,,,False,,False,,VCP C1 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C2,display descriptor length,False,,,,False,,False,,VCP C2 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C3,transmit display descriptor,False,,,,False,,False,,VCP C3 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C4,enable display of display descriptor,False,,,,False,,False,,VCP C4 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C5,not defined in MCCS 2.2a,False,,,,False,,False,,VCP C5 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C6,application enable key,True,0,17868,65535,True,,False,,
+C7,not defined in MCCS 2.2a,False,,,,False,,False,,VCP C7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+C8,display controller type,True,0,22021,0,True,,False,,
+C9,display firmware level,True,0,16656,65535,True,,False,,
+CA,OSD / button control,True,1,0,255,True,,False,,
+CB,not defined in MCCS 2.2a,False,,,,False,,False,,VCP CB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+CC,OSD language,True,1,2,14,True,02 03 04 06 09 0A 0D 0E,False,,
+CD,status indicators,False,,,,False,,False,,VCP CD read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+CE,auxiliary display size,False,,,,False,,False,,VCP CE read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+CF,auxiliary display data,False,,,,False,,False,,VCP CF read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D0,output select,False,,,,False,,False,,VCP D0 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D1,not defined in MCCS 2.2a,False,,,,False,,False,,VCP D1 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D2,asset tag,False,,,,False,,False,,VCP D2 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D3,not defined in MCCS 2.2a,False,,,,False,,False,,VCP D3 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D4,stereo video mode,False,,,,False,,False,,VCP D4 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D5,not defined in MCCS 2.2a,False,,,,False,,False,,VCP D5 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D6,power mode,True,0,1,255,True,01 04 05,False,,
+D7,auxiliary power output,False,,,,False,,False,,VCP D7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D8,not defined in MCCS 2.2a,False,,,,False,,False,,VCP D8 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+D9,not defined in MCCS 2.2a,False,,,,False,,False,,VCP D9 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+DA,scan mode,False,,,,False,,False,,VCP DA read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+DB,image mode,False,,,,False,,False,,VCP DB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+DC,display mode,True,1,0,255,True,00 03,False,,
+DD,not defined in MCCS 2.2a,False,,,,False,,False,,VCP DD read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+DE,scratch pad,True,0,0,0,False,,True,"hidden: replies, not in caps; 0 of 0: may be unsupported",
+DF,VCP version,True,0,513,255,True,,False,,
+E0,manufacturer E0,True,1,0,1,True,,False,,
+E1,Dell power (inverted),True,1,0,1,True,,False,,
+E2,preset mode (report),True,0,30,255,True,00 04 0E 12 0B 1B 14 1E 1F 20 21 22 2F 23 24 27 3A,False,,
+E3,manufacturer E3,True,1,0,1,True,,False,,
+E4,manufacturer E4,True,1,0,1,True,,False,,
+E5,manufacturer E5,True,1,0,2,True,,False,,
+E6,manufacturer specific,True,1,1,1,False,,True,"hidden: replies, not in caps",
+E7,manufacturer specific,False,,,,False,,False,,VCP E7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+E8,PiP/PbP secondary input,True,1,17,65535,True,,False,,
+E9,PiP/PbP mode,True,1,0,255,True,00 01 02 21 22 24 29 2A 2D 2E,False,,
+EA,manufacturer EA,True,1,65025,65025,True,,False,,
+EB,manufacturer specific,False,,,,False,,False,,VCP EB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+EC,manufacturer EC,True,0,7936,255,True,01 02 04 06,False,,
+ED,manufacturer specific,False,,,,False,,False,,VCP ED read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+EE,manufacturer specific,False,,,,False,,False,,VCP EE read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+EF,manufacturer specific,False,,,,False,,False,,VCP EF read failed on monitor 0 (Windows error 0xC0262589: An operation failed because a DDC/CI message had an invalid value in its command field.)
+F0,preset select (part),True,1,13,255,True,00 05 06 0A 0D 0E 0F 10 11 13 31 32 34 36,False,,
+F1,manufacturer F1,True,1,283,283,True,,False,,
+F2,HDR state (report),True,1,0,65280,True,,False,,
+F3,manufacturer specific,False,,,,False,,False,,VCP F3 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+F4,indirect register (gaming settings),True,1,48,1,True,10 11 12 13 14 15 16 17 30 31 32 33 40 41 42 43 44 45 46 47 A0 A1 A2 A3,False,,
+F5,manufacturer F5,True,1,48,1,True,1D,False,,
+F6,manufacturer specific,False,,,,False,,False,,VCP F6 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+F7,manufacturer specific,False,,,,False,,False,,VCP F7 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+F8,manufacturer specific,False,,,,False,,False,,VCP F8 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+F9,manufacturer specific,False,,,,False,,False,,VCP F9 read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+FA,manufacturer specific,True,0,0,65535,False,,True,"hidden: replies, not in caps",
+FB,manufacturer specific,False,,,,False,,False,,VCP FB read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+FC,manufacturer specific,False,,,,False,,False,,VCP FC read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)
+FD,manufacturer FD,True,1,98,65535,True,,False,,
+FE,manufacturer FE,True,1,159,65535,True,,False,,
+FF,manufacturer specific,False,,,,False,,False,,VCP FF read failed on monitor 0 (Windows error 0xC0262584: The monitor does not support the specified VCP code.)

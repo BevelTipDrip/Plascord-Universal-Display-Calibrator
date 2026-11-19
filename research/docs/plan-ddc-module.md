@@ -432,9 +432,10 @@ run the scan." Read only: nothing was written. Data: `data/ddc-t-ddc1-asleep-202
 on `\\.\DISPLAY17`. D6 power mode read 4 (standby). Earlier the same day, `list` found no monitor at all
 (WinDisc only), so asleep is not the same state as that one.
 
-**The first reads after sleep were not reliable.** The T-DDC1 `get` (the first commands) read brightness 0 and E2 0.
-The scan a minute later read brightness 35 and E2 4, and so did the closing `get`. Nothing was written in between.
-Until this is understood, discard the first reads after the monitor wakes, or read twice.
+**Some values follow the power state** (corrected by the awake run below). The T-DDC1 `get` read brightness 0 and
+E2 0; the scan a minute later read brightness 35 and E2 4. Nothing was written in between. The awake run shows why:
+in standby (D6 = 4) the monitor reports standby values for brightness, E2 and F2, and these can change while it
+sleeps. Read D6 first, and trust state codes only when D6 = 1.
 
 **Capabilities:** model AW3225QF, MCCS 2.1. The 42 codes listed are exactly those in vdu_controls issue 84 (another
 person's AW3225QF). The `cmds` list includes `E3 F3` (table read and write).
@@ -456,10 +457,40 @@ candidates): 03 06 0B 0C 0E 1E 20 30 3E 62 6C 6E 70 A8 B4 C0 DE E6 FA.
 
 **Values while asleep:** brightness 35, contrast 75, 14 colour preset 5 (6500 K), gains 100 / 100 / 100, black
 levels 50 / 50 / 50, E2 4, F0 13, F2 0, F4 48 (max 1), F5 48 (max 1), C9 firmware level 16656 (0x4110), DF VCP
-version 513 (0x0201). F2 reading 0 does not match the AW3423DWF's "65 with HDR on". That may be the standby state;
-rerun with the monitor awake before drawing a conclusion.
+version 513 (0x0201). F2 reading 0 is the standby state (see the awake run).
+
+## T-DDC2 run with the monitor awake (2026-11-19)
+
+BevelTipDrip: "You're free to wake it up yourswlf and take the reading. It should already be in hdr400". The display
+was woken with `display_power.py wake` (a mouse nudge). Read only: nothing was written.
+
+- **First attempt** (`data/ddc-t-ddc2-scan-awake-fell-asleep-2026-11-19.*`): the monitor went back to standby
+  partway through the scan. D6 read 1 when the scan reached it; E2 read 30, a value in transition; and the closing
+  `get` showed D6 4, brightness 0, E2 4, F2 0. Windows turned the display off again because nothing held it on.
+- **Held run** (`data/ddc-t-ddc2-scan-awake-held-2026-11-19.*`): `SetThreadExecutionState(ES_CONTINUOUS |
+  ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED)` held the display on for the whole run; D6 stayed 1. The same 61 codes
+  replied, and the same 19 hidden ones. Compared with the asleep scan, only these differ:
+
+| VCP | Awake (True Black 400, Windows HDR on) | Asleep | Reading |
+|---|---|---|---|
+| D6 power mode | 1 (on) | 4 (off, soft) | MCCS standard |
+| E2 preset report | 58 | 4 (0 at the first read) | 58 is also the AW3423DWF's "DisplayHDR" number: True Black 400 likely reports 58 [I] |
+| F2 | 585 (0x0249) | 0 | Follows HDR or power; the AW3423DWF's "65" does not hold here [I] |
+| F4 / F5 | 48, then 16 | 48 | See below |
+| 60 input source | 3855 (0x0F0F) | 3858 (0x0F12) | Low byte 0F = DisplayPort 1; the asleep value differs |
+
+**F4 and F5 changed with no write.** Both read 48 (0x30) at the first `get`, then 16 (0x10) in the scan and in the
+closing `get`. Both values appear in F4's capability list: 10-17, 30-33, 40-47 and A0-A3. F4 looks like a
+register selector, and something during the scan moved it. Two candidates:
+- a read of another code (the scan reads every code in order);
+- the monitor itself.
+
+MCCS says reads must not change state, so this needs a closer look before anything reads or writes the
+F4 family. Recorded in the module as "reads may move F4's selector" [I]. Brightness, contrast, gains and black
+levels read the same awake and asleep.
 
 **Next:**
-1. Rerun the scan with the monitor awake in True Black 400, Windows HDR on (T-DDC2, awake).
-2. Then the preset comparison (T-DDC2b): BevelTipDrip changes one OSD setting at a time, and the scan is repeated
-   after each change.
+1. A keep-awake option in the CLI (`scan --keep-awake`, or always on for `scan`). This run used a wrapper script.
+2. Find what moves F4: read F4 after each code in turn, read only.
+3. The preset comparison (T-DDC2b): BevelTipDrip changes one OSD setting at a time, and the scan is repeated after
+   each change.
