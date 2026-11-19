@@ -130,6 +130,8 @@ and then interpolate the color adjustment for the in-between values". Built as `
   (`build_mhc2.py --identity-lut --neutral`). BevelTipDrip stopped the first identity check because the active
   profile was an HDR Calibration one: "which is not necessarilly neutral (I believe saturation is turned up on all
   of those)". Grey patches are unaffected by that matrix (it maps D65 to D65), the search's off-grey patches are not.
+- Near black, some crush is accepted to get neutral grey (BevelTipDrip, 2026-11-19: "The alternative is a noticable
+  purple tint, or a washed out image, it's fine, some compromise will have to be made").
 - Target **D65 (0.3127/0.3290) at every level** of the grey scale, not the panel's own grey (BevelTipDrip,
   2026-11-18: "we should probably fix that and target d65").
 - A little luminance error near black is acceptable to get the colour right; prefer a step slightly too dark over
@@ -274,3 +276,25 @@ codes at the low edge of a step, so one code of edge movement drops a level a wh
 Changes after this run (BevelTipDrip agreed, 2026-11-19): a polish step (one code on each channel alone) and step
 centring (`centre_on_step`); the same centring belongs in how v3's LUT is built. Next: stage 2 in two parts
 (31, 35, 40, 52; then 56, 64, 75, 85), ~25-30 min each.
+
+## T-NT3: anchors stage 2a, inputs 31, 35, 40, 52 (2026-11-19 03:18-04:40, run by Claude for BevelTipDrip, build `18b0034`, log `data/nearblack-t-nt3-stage2a-2026-11-19.csv`)
+
+Neutral profile; settle codes +11% / +8% / -9% / -5% / -6% / 0% against T-NB3 (the step edges moved again, compare
+T-NT2); 141 patches in 82 min (~35 s per patch: near the meter floor, plus the polish rounds). Reference -0.2% at the
+end. Repeat readings within a patch agreed to 0.3% (median), 0.8% (max): the meter is precise here; the long
+anchors come from big steps (one code on one channel moves brightness 10-50%), on which the polish keeps finding a
+genuinely better neighbour.
+
+| Anchor | v2's grey | Chosen (current weighting) | Darkest-side alternative, 0.6-1.0x | Near-target alternative, 0.85-1.15x |
+|---|---|---|---|---|
+| 31 (0.020 nit) | 31/31/31, ~0.68x, purple | 32/34/28: 0.79x, Delta u'v' 0.016 (xy 0.331/0.323) | 31/33/28: 0.68x, 0.0042 | 32/34/29: 0.87x, 0.026 |
+| 35 (0.026) | 32/32/32: 0.79x, 0.10 | 32/33/27: 0.64x, 0.017 | (same) | 33/34/29: 0.91x, 0.049 |
+| 40 (0.035) | 34/34/34: 0.96x, 0.095 | 34/36/29: 1.17x, 0.030 (green-yellow, y 0.384) | 34/35/29: 0.68x, 0.051 (purple) | 34/36/28: 1.15x, 0.042 |
+| 52 (0.062) | 37/37/37: 1.15x, 0.062 | 37/36/32: 0.93x, 0.013 | (same) | 36/38/32: 1.12x, 0.0098 |
+
+- Purple near black can be brought close to neutral at 0.02-0.06 nit (Delta u'v' 0.004-0.017), at 0.64-0.93x.
+- Input 40 has no good point: green moves in one coarse step from purple to green-yellow.
+- The weighting decides a lot: at input 31 the chosen point is 0.79x / 0.016, while 0.68x / 0.0042 was measured too.
+  All readings are kept, so the choice can be re-weighed without measuring again.
+- BevelTipDrip watched the patches and saw it "eventually reach a patch that's quite close to the correct shade of
+  grey".
