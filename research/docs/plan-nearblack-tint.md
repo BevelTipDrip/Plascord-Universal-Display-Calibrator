@@ -122,3 +122,20 @@ Alternatives considered:
 
 - The strength of the crushed-over-raised weighting (BevelTipDrip).
 - None on scope (see Decisions).
+
+## T-NT0: which HDR profile is active? (2026-11-18 22:45-23:05, run by Claude for BevelTipDrip, logs `data/nearblack-t-nt0-profile-check-2026-11-18.csv`, `data/nearblack-t-nt0-profile-check-tb400-2026-11-18.csv`, `data/nearblack-t-nt0-lut-plateau-check-2026-11-18.csv`)
+
+Before the search run (it needs an identity profile), with Windows colour management broken (Q-11): the per-user
+association list was reordered so `HDR Calibrated Profile 11-18-2026 11563.icc` (identity LUT) is last, backed up
+first (`C:\Users\Ty\icm-assoc-0000-backup-2026-11-18.reg`), and Windows HDR toggled off and on. The OSD preset had
+reset to Desktop after the monitor was unplugged; BevelTipDrip set True Black 400 again before the second check.
+
+- Three greys, twice: 0.05 nit -> 0.072, 0.1 -> 0.127-0.129, 1 -> 1.077-1.084 (reference 94-95). Neither
+  uncorrected True Black 400 (0.138 / 0.229 / 1.28, T-NB3) nor v2 (0.060 / 0.108 / 0.98, T-NB9).
+- Plateau test: v2 sends inputs 36 and 42 to code 34, 43 and 50 to code 35; with no LUT they are four different
+  panel steps. Measured: 36, 42, 43 all 0.0317 nit, 50 0.069. **A LUT is active**, but neither v1 nor v2 matches,
+  with truncation (v2 would group 43 with 50; v1 all four) or with rounding.
+- If the active LUT is v1- or v2-like, the panel reads ~15-20% brighter at the same output codes than in T-NB3.
+
+Verdict: which profile Windows applies can be neither controlled nor read while Q-11 lasts; no search run until it
+can (BevelTipDrip, 2026-11-18: "I think it's clear we need to fix profile selection"). Q-18 opened.

@@ -44,6 +44,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
+| Q-18 | research | Plascord loads its own correction (per-display LUT and matrix) without Windows colour management | | | open | Windows profile selection is unreliable (Q-11, T-NT0); the tool should not depend on it (BevelTipDrip, 2026-11-18). Candidates: GPU driver APIs, the kernel display gamma path. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
 | Q-3 | feature | Re-apply the HDR profile after waking from standby | | | open | ledoge's fix: a scheduled task on System log, Power-Troubleshooter, Event ID 1. [profiles-reference.md](profiles-reference.md) |
 | Q-4 | research | Check the profile reaches fullscreen games (independent flip) | | | run | Reaches the MediEvil port's swapchain (T-MED2); flip mode there unknown; confirm in a known fullscreen game. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-5 | research | Visual check of codes 15, 22, 27, 31, 37 (below the meter's floor) against black | | | open | Decides how the LUT treats inputs under ~0.015 nit. [measurement-reference.md](measurement-reference.md) |
