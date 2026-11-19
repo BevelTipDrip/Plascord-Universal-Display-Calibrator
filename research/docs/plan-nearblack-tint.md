@@ -81,9 +81,14 @@ Alternatives considered:
 
 ## Decisions
 
+- A little luminance error near black is acceptable to get the colour right; when the choice is between a step
+  slightly too dark and one too bright, prefer the darker, unless the brighter one is very close (BevelTipDrip,
+  2026-11-18: "A little brightness error near black is okay, though I would generally prefer slightly crushed black
+  over raised ones. Obviously if the next brightness level up is 1% away, that's one thing"). How to weigh it in
+  the solver and in snapping: proposed in the reply of 2026-11-18, to be confirmed.
 - (Pending) Target grey: the panel's own grey, as proposed, or D65.
 - (Pending) Approach as above, starting with stage NT1.
 
 ## Open questions
 
-- Is a small luminance error near black acceptable to get the colour right, and how much (BevelTipDrip)?
+- How strongly to prefer crushed over raised (see Decisions): the weighting, to be confirmed by BevelTipDrip.

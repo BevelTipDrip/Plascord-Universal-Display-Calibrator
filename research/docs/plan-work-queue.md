@@ -46,7 +46,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 |---|---|---|---|---|---|---|
 | Q-2 | feature | Peak 1000: dense sweep, then a v2 (snapped) profile | | | open | v1 is unsnapped and built from the 26-level run, 2 points in the 0.01-0.08 nit jump (T-NB2). [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-3 | feature | Re-apply the HDR profile after waking from standby | | | open | ledoge's fix: a scheduled task on System log, Power-Troubleshooter, Event ID 1. [profiles-reference.md](profiles-reference.md) |
-| Q-4 | research | Check the profile reaches fullscreen games (independent flip) | | | open | The patch generator flips independently and gets the LUT (T-NB7), so it should; confirm in real games. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
+| Q-4 | research | Check the profile reaches fullscreen games (independent flip) | | | run | Reaches the MediEvil port's swapchain (T-MED2); flip mode there unknown; confirm in a known fullscreen game. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-5 | research | Visual check of codes 15, 22, 27, 31, 37 (below the meter's floor) against black | | | open | Decides how the LUT treats inputs under ~0.015 nit. [measurement-reference.md](measurement-reference.md) |
 | Q-6 | research | DDC/CI black level (VCP 6C/6E/70) sweep | | | open | Probe `--ddc-sweep`; run with the uncorrected HDR profile so the LUT does not mask it. [measurement-reference.md](measurement-reference.md) |
 | Q-7 | research | SDR run: Windows HDR off, Creator mode gamma 2.2 | | | open | Probe `--mode sdr`. [measurement-reference.md](measurement-reference.md) |
@@ -64,4 +64,4 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 | Q-14 | feature | Linux support: Vulkan HDR10 patch generator and the Linux colour pipeline | | | open | After Q-12. [patchgen-reference.md](patchgen-reference.md) |
 | Q-15 | feature | User interface | | | open | After Q-12. [plan-roadmap.md](plan-roadmap.md) |
 | Q-16 | feature | Samsung S95B module (network control, calibration settings) | | | open | ColorControl is prior art; read and record service-menu values before changing any. [plan-roadmap.md](plan-roadmap.md) |
-| Q-17 | research | 30-100 nits reads 4-8% low on True Black 400: panel tracking or the meter correction? | | | found | Uncorrected and corrected runs agree (T-NB3, T-NB9). [measurement-reference.md](measurement-reference.md) |
+| Q-17 | research | 30-100 nits reads 4-8% low on True Black 400: panel tracking or the meter correction? | | | found | Only with the ccmx: without it, 30 nits reads 1.01x (T-MED2). Decide which correction to trust. [measurement-reference.md](measurement-reference.md) |

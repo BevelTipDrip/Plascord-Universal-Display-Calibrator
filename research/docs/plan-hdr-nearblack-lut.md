@@ -31,6 +31,11 @@ display pipeline to everything Windows sends to the display in HDR mode.
   alone (Q-17).
 - Earlier readings in True Black 400 from BevelTipDrip's earlier meter project, 2026 (HCFR, same meter):
   0.035 nit -> 0.117, 0.1 -> 0.27, 1 -> 1.49, 10 -> 11.0 [V in that project's data]. Same shape as T-NB3.
+- **The v2 profile reaches a game's own swapchain** [V] (T-MED2): raw PQ patches written by the MediEvil PC port
+  read the same as the probe's within 2-3% once the same meter correction is applied, against 3.35x at 0.05 nit
+  before any profile (T-MED1). Whether that game presents with independent flip is not known (Q-4).
+- **Readings without the meter correction are about 4.5% higher in Y** than with it (the ccmx's Y row is
+  0.023 X + 0.935 Y - 0.001 Z) [V] (T-MED2). Compare runs only with the same correction.
 - The meter reads 0 below about 0.005 nit, and readings under about 0.015 nit are unreliable
   ([measurement-reference.md](measurement-reference.md)).
 
@@ -143,3 +148,22 @@ Same profile as T-NB8, standard levels. Reference drift +0.4%. Ratio measured/ta
 0.02 and 0.05 nit miss because the panel has no step closer (0.017, 0.058). 30-100 nits is identity (Q-17).
 Chromaticity unchanged by the LUT: xy 0.273/0.241 at 0.05 nit, 0.281/0.266 at 0.1 (`data/nearblack-t-nb9-tb400-v2-verify-2026-11-18.csv:8`,
 `:10`). Verdict: run, the luminance correction holds from 0.075 to 20 nits; not yet verified by a person in use.
+
+## T-MED1: MediEvil in-game raw PQ patches, no profile (2026-11-18 11:17, run by BevelTipDrip in the MediEvil project, log `data/medievil-t-med1-raw-pq-uncorrected-2026-11-18.csv`)
+
+Copied from that project's `research-data/meter/20261118-111751-game-hdr-nearblack-hdr.csv` (read only there).
+The port's test-pattern server writes raw PQ codes into its swapchain after the game's frame (its own near-black
+correction off); ArgyllCMS 3.5.0, display type `o`, **no meter correction**; True Black 400; Windows HDR
+Calibration profile. 0.05 nit -> 0.168 (3.35x), 0.1 -> 0.268 (2.68x), 1 -> 1.50 (1.49x), 10 -> 11.0 (1.10x): the
+same lift as T-NB3, about 5% higher throughout from the missing correction.
+
+## T-MED2: MediEvil in-game raw PQ patches, True Black 400 v2 profile (2026-11-18 20:37, run by BevelTipDrip in the MediEvil project, log `data/medievil-t-med2-raw-pq-v2-2026-11-18.csv`)
+
+Same tool and settings as T-MED1 (`hdr_black_correction=0` in the port's ini), with the v2 profile active; same
+10-bit codes as T-NB9. As read (no correction): 0.05 nit -> 0.061 (1.22x), 0.1 -> 0.111, 0.5 -> 0.532 (1.06x),
+1 -> 1.05, 10 -> 10.6, 30 -> 30.3. With the AW3225QF ccmx applied to its XYZ: 0.975-1.033 of T-NB9 at every level
+from 0.02 to 30 nits (worst +3.3% at 0.75 nit, about one 10-bit code there). Verdict: the profile applies to this
+game's output and gives the same near black as the probe; the 5-8% "above target" read in the game came from the
+missing meter correction. BevelTipDrip (2026-11-18): "from 0.05 to 0.3 the readings are 1-8% above target. At
+scene 0.02 (~0.5 nits) it's 12% above" (the port's game-grey run; about 7% with the correction, of which about 2%
+is in the raw patch, so the rest is in the game's own grading path [I]).
