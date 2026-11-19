@@ -486,7 +486,7 @@ register selector, and something during the scan moved it. Two candidates:
 - the monitor itself.
 
 MCCS says reads must not change state, so this needs a closer look before anything reads or writes the
-F4 family. Recorded in the module as "reads may move F4's selector" [I]. Brightness, contrast, gains and black
+F4 family; the module (`displays/aw3225qf.py`) does not record this yet [I]. Brightness, contrast, gains and black
 levels read the same awake and asleep.
 
 **Next:**
