@@ -6,4 +6,5 @@ A `done` row names its commit or PR and who verified it; a `dropped` row says wh
 
 | ID | Kind | Item | State | Result | Commit / PR | Verified by | Date |
 |---|---|---|---|---|---|---|---|
+| Q-21 | chore | Alienware Command Center can reinstall itself through a monitor extension driver | dropped | No action: BevelTipDrip disabled the installation on purpose (2026-11-19: "The command center can't Install automatically, because I effectively bricked the installation, intentionally, to prevent it from auto-installing"). See profiles-reference.md section 7 | 4afe486 | | 2026-11-19 |
 | Q-2 | feature | Peak 1000: dense sweep, then a v2 (snapped) profile | dropped | Dropped for now: True Black 400 is the mode to calibrate (BevelTipDrip, 2026-11-18: "we will drop it for now at least, the correct mode for the monitor is a well calibrated HDR400") | | | 2026-11-18 |

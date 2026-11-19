@@ -84,11 +84,12 @@ installer was unpacked or run). Found, not yet confirmed by a test:
   profiles; slot `0001` is empty, so when Windows brings the monitor up as the other instance it falls back to
   the device default, Dell's identity profile, and the correction is gone. A likely cause of profiles "changing"
   after resets (Q-10, Q-11), and of switching to PBP/PIP or the other HDR input (new hardware ID, new instance).
-  Q-22.
+ 
+  Q-22, on hold until we know what the second instance is (BevelTipDrip, 2026-11-19).
 - **Command Center can reinstall itself:** an extension driver bound to the monitor (`awfxdisp_aw3225qf_ext_monitor.inf`,
   `oem27.inf` 1.0.0.0 bound, 2.0.0.0 `oem115.inf` staged) adds a software component whose driver
   (`AWCC_IM_Driver_Component.inf`, 2.7.2.0) runs `AWCCInstallationManager.exe /silent /IS_DRIVER_FLOW:YES
   /ISFeatureInstall:ALL` (Command Center 6.14.4.0). The component device is Started; its logs show attempts on
   2026-10-09, 2026-10-11 and 2026-11-15, the last two aborted (0x643). Leftovers: `C:\ProgramData\Alienware`
   (575 MB of cached installers, among them `AWDisplayInstaller.exe`), `C:\ProgramData\Dell` (logs),
-  `DellInstrumentation.sys` staged in the driver store. Q-21.
+  `DellInstrumentation.sys` staged in the driver store. Q-21. No action: BevelTipDrip disabled the installation on purpose (2026-11-19).
