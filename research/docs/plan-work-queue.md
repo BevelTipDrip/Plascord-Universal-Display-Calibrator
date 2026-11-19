@@ -38,6 +38,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
+| Q-20 | feature | DDC/CI module: read/write a monitor's VCP codes safely, Windows first, Linux later | BevelTipDrip | feature/ddc-module | in progress | Groundwork by a Claude agent while BevelTipDrip is away; nothing written to a display. Related: Q-6 (black-level sweep), Q-12 (module architecture, undecided). Plan doc to follow on the branch |
 
 ## Next
 
