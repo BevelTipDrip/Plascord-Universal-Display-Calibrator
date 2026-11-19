@@ -1,0 +1,62 @@
+### list
+0  Alienware AW3225QF(DisplayPort HDR)  \\.\DISPLAY17
+### caps
+model AW3225QF, type lcd, MCCS 2.1; display module AW3225QF
+  02  new control value
+  04  restore factory defaults            [never written]
+  05  restore factory brightness/contrast  [never written]
+  08  restore factory colour              [never written]
+  10  brightness                          [writable here]
+  12  contrast                            [writable here]
+  14  colour preset                       values 01 05 08 0B 0C
+  16  red gain                            [writable here]
+  18  green gain                          [writable here]
+  1A  blue gain                           [writable here]
+  52  active control
+  60  input source                        [never written]  values 0F 11 12
+  87  sharpness
+  AC  horizontal frequency
+  AE  vertical frequency
+  B2  flat panel sub-pixel layout
+  B6  display technology type
+  C6  application enable key
+  C8  display controller type             [never written]
+  C9  display firmware level              [never written]
+  CA  OSD / button control                [never written]
+  CC  OSD language                        values 02 03 04 06 09 0A 0D 0E
+  D6  power mode                          [never written]  values 01 04 05
+  DC  display mode                        values 00 03
+  DF  VCP version
+  E0  manufacturer E0
+  E1  Dell power (inverted)               [never written]
+  E2  preset mode (report)                values 00 04 0E 12 0B 1B 14 1E 1F 20 21 22 2F 23 24 27 3A
+  E3  manufacturer E3
+  E4  manufacturer E4
+  E5  manufacturer E5
+  E8  PiP/PbP secondary input
+  E9  PiP/PbP mode                        values 00 01 02 21 22 24 29 2A 2D 2E
+  EA  manufacturer EA
+  EC  manufacturer EC                     values 01 02 04 06
+  F0  preset select (part)                values 00 05 06 0A 0D 0E 0F 10 11 13 31 32 34 36
+  F1  manufacturer F1
+  F2  HDR state (report)
+  F4  indirect register (gaming settings)  values 10 11 12 13 14 15 16 17 30 31 32 33 40 41 42 43 44 45 46 47 A0 A1 A2 A3
+  F5  manufacturer F5                     values 1D
+  FD  manufacturer FD
+  FE  manufacturer FE
+### caps raw
+(prot(monitor)type(lcd)model(AW3225QF)cmds(01 02 03 07 0C E3 F3)vcp(02 04 05 08 10 12 14(01 05 08 0B 0C) 16 18 1A 52 60( 0F 11 12) 87 AC AE B2 B6 C6 C8 C9 CA CC(02 03 04 06 09 0A 0D 0E) D6(01 04 05) DC(00 03 ) DF E0 E1 E2(00 04 0E 12 0B 1B 14 1E 1F 20 21 22 2F 23 24 27 3A)E3 E4 E5 E8 E9(00 01 02 21 22 24 29 2A 2D 2E) EA EC(01 02 04 06) F0(00 05 06 0A 0D 0E 0F 10 11 13 31 32 34 36) F1 F2 F4(10 11 12 13 14 15 16 17 30 31 32 33 40 41 42 43 44 45 46 47 A0 A1 A2 A3) F5(1D) FE FD)mccs_ver(2.1)mswhql(1))
+### get (T-DDC1)
+VCP 10 brightness                     0 of 100
+VCP 12 contrast                       75 of 100
+VCP 14 colour preset                  5 of 12  (6500 K)
+VCP 16 red gain                       100 of 100
+VCP 18 green gain                     100 of 100
+VCP 1A blue gain                      100 of 100
+VCP 6C red black level                50 of 255
+VCP 6E green black level              50 of 255
+VCP 70 blue black level               50 of 255
+VCP DC display mode                   0 of 255
+VCP E2 preset mode (report)           0 of 255  (Standard)
+VCP F2 HDR state (report)             0 of 65280
+VCP C9 display firmware level         16656 of 65535

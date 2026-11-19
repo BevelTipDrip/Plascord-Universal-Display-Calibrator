@@ -421,3 +421,45 @@ Second session, same day (Claude, for BevelTipDrip): `python -m ddc list` at the
 12:42 gave the same result (only `WinDisc`, 0xC02625E5); no other command ran against the real backend.
 
 T-DDC1 (D2) and T-DDC2 (D2b) are still to run: [the plan for them](#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run).
+
+## T-DDC1 and T-DDC2 run with the monitor asleep (2026-11-19)
+
+Run by Claude for BevelTipDrip, who said: "The monitor is actually on but asleep right now, so you should be able to
+run the scan." Read only: nothing was written. Data: `data/ddc-t-ddc1-asleep-2026-11-19.txt`,
+`data/ddc-t-ddc2-scan-asleep-2026-11-19.csv` / `.json` / `.txt`.
+
+**DDC/CI answers while the monitor sleeps.** `list` found the monitor as "Alienware AW3225QF(DisplayPort HDR)"
+on `\\.\DISPLAY17`. D6 power mode read 4 (standby). Earlier the same day, `list` found no monitor at all
+(WinDisc only), so asleep is not the same state as that one.
+
+**The first reads after sleep were not reliable.** The T-DDC1 `get` (the first commands) read brightness 0 and E2 0.
+The scan a minute later read brightness 35 and E2 4, and so did the closing `get`. Nothing was written in between.
+Until this is understood, discard the first reads after the monitor wakes, or read twice.
+
+**Capabilities:** model AW3225QF, MCCS 2.1. The 42 codes listed are exactly those in vdu_controls issue 84 (another
+person's AW3225QF). The `cmds` list includes `E3 F3` (table read and write).
+
+**Scan:** 256 codes read, 61 replied. 19 replied without being listed in the capabilities (the hidden-setting
+candidates): 03 06 0B 0C 0E 1E 20 30 3E 62 6C 6E 70 A8 B4 C0 DE E6 FA.
+- **Real settings, confirmed hidden:** the black levels 6C / 6E / 70 (50 of 255, as on 2026-11-18).
+- **Worth a closer look:**
+  - 0B / 0C colour temperature (increment 0 of 24028; request 2 of 255);
+  - C0 display usage time, 2359 (hours: panel use, relevant to OLED wear);
+  - A8 (not in MCCS, 0 of 3);
+  - B4 source timing mode (1 of 2);
+  - E6 (manufacturer, 1 of 1);
+  - FA (manufacturer, 0 of 65535).
+- **Probably scaler defaults, not real settings on an OLED:**
+  - 0E clock, 3E clock phase, 20 / 30 position, 1E auto setup (these are analogue-video controls);
+  - 62 speaker volume (the monitor has no speakers);
+  - 03 soft controls, 06 restore geometry, DE scratch pad (0 of 0).
+
+**Values while asleep:** brightness 35, contrast 75, 14 colour preset 5 (6500 K), gains 100 / 100 / 100, black
+levels 50 / 50 / 50, E2 4, F0 13, F2 0, F4 48 (max 1), F5 48 (max 1), C9 firmware level 16656 (0x4110), DF VCP
+version 513 (0x0201). F2 reading 0 does not match the AW3423DWF's "65 with HDR on". That may be the standby state;
+rerun with the monitor awake before drawing a conclusion.
+
+**Next:**
+1. Rerun the scan with the monitor awake in True Black 400, Windows HDR on (T-DDC2, awake).
+2. Then the preset comparison (T-DDC2b): BevelTipDrip changes one OSD setting at a time, and the scan is repeated
+   after each change.
