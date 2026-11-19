@@ -1,0 +1,19 @@
+name: unit-tests
+
+# Runs the modules' own unit tests; none needs hardware (the DDC/CI tests use the fake backend). Same runner and
+# Python as docs-check. How to run them locally: research/docs/building-and-tools.md, "Test".
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ddc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: tools/ddc unit tests
+        run: python -m unittest discover -v -s tools/ddc/tests -t tools
