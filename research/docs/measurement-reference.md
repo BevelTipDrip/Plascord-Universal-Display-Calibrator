@@ -41,6 +41,7 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 | A profile changes nothing measurable | NVIDIA reference mode, or Windows lost the monitor (Q-11) | [profiles-reference.md](profiles-reference.md) |
 | Readings of 0 below ~0.005 nit, noisy below ~0.015 | The ColorMunki Display's floor | Section 5; Q-5 for a visual check |
 | 30-100 nits read 4-8% low | Panel tracking or the meter correction (open) | Q-17 |
+| Same preset and codes read 15-20% brighter near black than an earlier session | The panel's near-black curve moved (power cut, resets, warm-up?); compare with the baseline's reference and near-black codes before building on old data | Q-19, T-NT0 |
 | Another tool's readings ~4-5% higher than the probe's | Read without the AW3225QF ccmx (the probe always uses it) | T-MED2 in [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 
 ## 5. Things not to retry

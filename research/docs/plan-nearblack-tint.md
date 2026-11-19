@@ -145,3 +145,11 @@ reset to Desktop after the monitor was unplugged; BevelTipDrip set True Black 40
 
 Verdict: which profile Windows applies can be neither controlled nor read while Q-11 lasts; no search run until it
 can (BevelTipDrip, 2026-11-18: "I think it's clear we need to fix profile selection"). Q-18 opened.
+
+**T-NT0, follow-up (2026-11-18 ~23:40, log `data/nearblack-t-nt0-neutral-check-2026-11-18.csv`).** After
+BevelTipDrip ran CRU's `restart64.exe` (Windows lists the monitor again, Q-11) and the neutral profile was installed
+and selected: inputs 36 / 42 / 43 / 50 / 64 / 153 read 0.0705 / 0.127 / 0.127 / 0.177 / 0.261 / 1.397 nits. 36 and
+42 differ, so **no LUT is active** (identity confirmed). Against T-NB3 (same preset, uncorrected, afternoon) the same
+codes read **15-21% brighter below 0.2 nit**, +9% at 1 nit, while the 100-nit reference is only +1.3% (93.6-93.9 vs
+92.5): the near-black curve itself moved (Q-19). The meter failed once at the start ("Communication protocol
+breakdown") and read normally on the retry.
