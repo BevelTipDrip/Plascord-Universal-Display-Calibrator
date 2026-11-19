@@ -198,6 +198,112 @@ def measure(display_type, min_reads, ccmx=None):
     return Y, x, y, sd, n
 
 
+# ---------------------------------------------------------------- white balance search (per-channel codes)
+D65 = "0.3127,0.3290"
+# Input codes the search solves by default: from the lowest step the meter resolves to ~100 nits (code 520).
+SEARCH_CODES = ("31,35,40,47,52,56,64,75,85,99,120,139,153,176,193,218,254,284,307,340,365,402,450,520")
+UV_TOL, Y_TOL = 0.002, 0.03  # a search point "hits" within these (Delta u'v'; luminance, as a log ratio)
+
+
+def xyz_of(Y, x, y):
+    return (x / y * Y, Y, (1 - x - y) / y * Y) if Y > 0 and y > 0 else (0.0, 0.0, 0.0)
+
+
+def duv(x, y, white):
+    """CIE 1976 u'v' distance between xy and the white point xy."""
+    def uv(x, y):
+        d = -2 * x + 12 * y + 3
+        return 4 * x / d, 9 * y / d
+    if y <= 0:
+        return float("inf")
+    (u, v), (uw, vw) = uv(x, y), uv(*white)
+    return math.hypot(u - uw, v - vw)
+
+
+def search_cost(res, T, white, raised_weight):
+    """How far a reading is from (T nits, white): colour in u'v', luminance in log, too bright weighs more
+    (BevelTipDrip 2026-11-18: slightly crushed black is better than raised)."""
+    Y, x, y = res[:3]
+    if Y <= 0:
+        return float("inf")
+    lr = math.log(Y / T)
+    w = raised_weight if lr > 0 else 1.0
+    return (duv(x, y, white) / UV_TOL) ** 2 + (w * lr / Y_TOL) ** 2
+
+
+def solve3(J, v):
+    """x with J x = v (3x3, Cramer), or None if singular."""
+    def det(m):
+        return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+    d = det(J)
+    if abs(d) < 1e-18:
+        return None
+    out = []
+    for c in range(3):
+        m = [row[:] for row in J]
+        for r in range(3):
+            m[r][c] = v[r]
+        out.append(det(m) / d)
+    return out
+
+
+def rgb_search(take, T, start, white, args, log):
+    """Find the per-channel 10-bit codes whose light is closest to T nits at the white point.
+
+    From a grey start, it measures each channel raised by a few codes (the step doubles until the change is
+    above the meter's noise) to get how X, Y, Z move per code, then takes Newton steps toward the target XYZ,
+    rounded to whole codes and limited to --search-max-step per channel, re-measuring the slopes at each new
+    point. It stops when a point is within UV_TOL / Y_TOL, when a step repeats a point, or after --search-iters.
+    Returns (best codes, best reading, number of readings)."""
+    seen = {}
+
+    def m(p):
+        p = tuple(min(max(int(c), 0), 1023) for c in p)
+        if p not in seen:
+            seen[p] = take(("rgb",) + p)
+            log(p, seen[p])
+        return p, seen[p]
+
+    def slopes(p, r):
+        base, cols = xyz_of(*r[:3]), []
+        for ch in range(3):
+            k = args.search_step
+            while True:
+                q = list(p)
+                q[ch] += k
+                q, rq = m(q)
+                d = [(a - b) / k for a, b in zip(xyz_of(*rq[:3]), base)]
+                # Large enough to be above the meter's noise (1% of the light), or give up at 32 codes.
+                if sum(abs(v) for v in d) * k > 0.01 * max(sum(base), sum(xyz_of(T, *white))) or k >= 32:
+                    break
+                k *= 2
+            cols.append(d)
+        return [[cols[c][row] for c in range(3)] for row in range(3)]
+
+    target = xyz_of(T, *white)
+    p, r = m((start, start, start))
+    J = None
+    for _ in range(args.search_iters):
+        if search_cost(r, T, white, args.raised_weight) <= 1.0 or r[0] <= 0:
+            break
+        if J is None:  # measured at the start, and again after a step that made things worse
+            J = slopes(p, r)
+        delta = solve3(J, [t - b for t, b in zip(target, xyz_of(*r[:3]))])
+        if delta is None:
+            break
+        lim = args.search_max_step
+        q = tuple(min(max(int(round(a + max(-lim, min(lim, dd)))), 0), 1023) for a, dd in zip(p, delta))
+        if q in seen:
+            break
+        q, rq = m(q)
+        if search_cost(rq, T, white, args.raised_weight) > search_cost(r, T, white, args.raised_weight):
+            J = None
+        p, r = q, rq
+    best = min(seen, key=lambda k: search_cost(seen[k], T, white, args.raised_weight))
+    return best, seen[best], len(seen)
+
+
 # ---------------------------------------------------------------- patch sources
 class SdrWindow:
     """Full-screen tkinter window with a centred patch of an 8-bit grey (Windows HDR off)."""
@@ -271,11 +377,14 @@ class HdrGenerator:
         print("HDR generator:", line)
 
     def show(self, level):
-        """level: nits (float), or ('code', n) for an exact 10-bit PQ code."""
+        """level: nits (float), ('code', n) for an exact 10-bit PQ code, or ('rgb', r, g, b) for separate 10-bit
+        codes per channel."""
         if self.p.poll() is not None:  # Esc in the generator window closes it
             self.abort.set()
             raise KeyboardInterrupt
-        if isinstance(level, tuple):
+        if isinstance(level, tuple) and level[0] == "rgb":
+            self.p.stdin.write(f"C {int(level[1])} {int(level[2])} {int(level[3])} {self.area}\n")
+        elif isinstance(level, tuple):
             self.p.stdin.write(f"P {level[1] / 1023!r} {self.area}\n")
         else:
             self.p.stdin.write(f"N {level!r} {self.area}\n")
@@ -362,7 +471,7 @@ def run(args, src):
                         code, tgt = pq10(lvl)
                     ratio = Y / tgt if tgt > 0 else float("nan")
                     print(f"{lvl:>7g} {code:>5} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
-                    rows.append([tag, "hdr", lvl, code, tgt, Y, sd, x, y, n])
+                    rows.append([tag, "hdr", lvl, code, tgt, Y, sd, x, y, n, code, code, code])
             else:
                 white = res[255][0] if 255 in res else float("nan")
                 print(f"\n[{tag}]  SDR, gamma {args.gamma} target from measured white {white:.2f} cd/m2")
@@ -371,7 +480,47 @@ def run(args, src):
                     tgt = white * (lvl / 255.0) ** args.gamma
                     ratio = Y / tgt if tgt > 0 else float("nan")
                     print(f"{lvl:>5} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
-                    rows.append([tag, "sdr", lvl, lvl, tgt, Y, sd, x, y, n])
+                    rows.append([tag, "sdr", lvl, lvl, tgt, Y, sd, x, y, n, lvl, lvl, lvl])
+
+        if args.search:
+            if not hdr:
+                raise RuntimeError("--search is for --mode hdr")
+            start_of = None
+            if args.response:
+                import build_mhc2  # same folder; its fit of a grey run gives the luminance-correct start
+                resp = build_mhc2.Response(build_mhc2.load_response(args.response, 0.008))
+                start_of = lambda T: resp.inverse(T)
+            white = tuple(float(v) for v in args.white.split(","))
+            codes = [int(c) for c in args.search_codes.split(",")]
+            print(f"\n[search] D65 target xy {white[0]:.4f}/{white[1]:.4f}, {len(codes)} input codes, "
+                  f"too-bright errors x{args.raised_weight:g}")
+            summary, since_ref = [], 0
+            for code in codes:
+                if since_ref >= REF_EVERY:
+                    r = take(ref_level, settle=1.0)[0]
+                    print(f"  (reference {r:.2f} cd/m2, {r / ref0 - 1:+.1%} vs start)", flush=True)
+                    since_ref = 0
+                T = nits_from_pq(code / 1023)
+                s = start_of(T) if start_of else None
+                start = int(round(s)) if s is not None else code
+
+                def log(p, res, code=code, T=T):
+                    Y, x, y, sd, n = res
+                    print(f"  in {code:>4}  rgb {p[0]:>4} {p[1]:>4} {p[2]:>4}: Y {Y:.5f} ({Y / T:.2f}x)  "
+                          f"xy {x:.4f}/{y:.4f}  duv {duv(x, y, white):.4f}", flush=True)
+                    rows.append([f"search_{code}", "hdr", code, code, T, Y, sd, x, y, n] + list(p))
+
+                best, res, count = rgb_search(take, T, start, white, args, log)
+                since_ref += count
+                Y, x, y, sd, n = res
+                rows.append(["best", "hdr", code, code, T, Y, sd, x, y, n] + list(best))
+                summary.append((code, T, best, Y, x, y))
+            print(f"\n[search]  best per input code (target D65 {white[0]:.4f}/{white[1]:.4f})")
+            print(f"{'in':>5} {'target':>9} {'r':>5} {'g':>5} {'b':>5} {'measured':>9} {'ratio':>6} {'x':>6} {'y':>6} "
+                  f"{'duv':>6}")
+            for code, T, b, Y, x, y in summary:
+                print(f"{code:>5} {T:>9.5f} {b[0]:>5} {b[1]:>5} {b[2]:>5} {Y:>9.5f} {Y / T:>6.2f} {x:>6.4f} "
+                      f"{y:>6.4f} {duv(x, y, white):>6.4f}")
 
         if args.levels:
             levels = [float(v) if hdr else int(v) for v in args.levels.split(",")]
@@ -381,7 +530,8 @@ def run(args, src):
             levels = [("code", c) for c in HDR_DENSE_CODES]
         else:
             levels = HDR_LEVELS if hdr else SDR_LEVELS
-        sweep(args.label or "baseline", levels)
+        if not args.search:
+            sweep(args.label or "baseline", levels)
 
         steps = args.ddc_steps or ([{c: v for c in BLACK_VCPS} for v in args.ddc_sweep] if args.ddc_sweep else None)
         if steps:
@@ -430,7 +580,8 @@ def run(args, src):
             csv_path = data_path(args.outdir, args.label or args.mode, valid)
             with open(csv_path, "w", newline="") as f:
                 w = csv.writer(f)
-                w.writerow(["run", "mode", "requested", "code", "target_cdm2", "Y_cdm2", "Y_sd", "x", "y", "reads"])
+                w.writerow(["run", "mode", "requested", "code", "target_cdm2", "Y_cdm2", "Y_sd", "x", "y", "reads",
+                            "r", "g", "b"])
                 w.writerows(rows)
             print(f"\nSaved {csv_path}")
         src.close()
@@ -465,6 +616,17 @@ def main():
                           "'16=96;16=100,1A=96;1A=100' (gain 16/18/1A, black level 6C/6E/70); each step keeps the "
                           "values it does not name; everything is restored before the end reference")
     ap.add_argument("--ddc-levels", help="comma list measured at each DDC step (default: a short sweep)")
+    ap.add_argument("--search", action="store_true",
+                    help="hdr: for each --search-codes input, search the per-channel codes that give its PQ "
+                         "luminance at --white (run it with an identity / uncorrected HDR profile)")
+    ap.add_argument("--search-codes", default=SEARCH_CODES, help="comma list of 10-bit input codes to solve")
+    ap.add_argument("--response", help="grey run CSV (dense) whose fit gives each search's luminance-correct start")
+    ap.add_argument("--white", default=D65, help="target white point x,y (default D65 0.3127,0.3290)")
+    ap.add_argument("--raised-weight", type=float, default=2.0,
+                    help="how much more a too-bright luminance error counts than a too-dark one (default 2)")
+    ap.add_argument("--search-iters", type=int, default=4, help="Newton steps per input code (default 4)")
+    ap.add_argument("--search-step", type=int, default=2, help="first per-channel probe step in codes (default 2)")
+    ap.add_argument("--search-max-step", type=int, default=12, help="largest change per channel per step (codes)")
     ap.add_argument("--monitor", default="AW3225QF", help="substring of the monitor name for DDC/CI")
     ap.add_argument("--outdir", default=DATA_DIR, help="where the CSV goes (default: research/docs/data)")
     args = ap.parse_args()

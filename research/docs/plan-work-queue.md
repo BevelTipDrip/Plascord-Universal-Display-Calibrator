@@ -38,7 +38,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
-| Q-1 | feature | Grey scale to D65 at every level: whole-scale magenta lean plus the blue/purple shift near black | BevelTipDrip | feature/nearblack-tint | in progress | Target D65 decided; DDC/CI gain + per-channel LUTs proposed, waiting for an answer before code. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
+| Q-1 | feature | Grey scale to D65 at every level: whole-scale magenta lean plus the blue/purple shift near black | BevelTipDrip | feature/nearblack-tint | built (search, not run) | Per-channel LUTs solved by a measured search; run needs the preset choice and a go. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
 
 ## Next
 

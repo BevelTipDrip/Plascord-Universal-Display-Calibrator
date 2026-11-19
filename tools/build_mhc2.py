@@ -39,8 +39,10 @@ def load_response(path, floor):
     pts = {}
     with open(path, newline="") as f:
         for r in csv.DictReader(f):
-            if r.get("mode") != "hdr":
-                continue
+            if r.get("mode") != "hdr" or r.get("run", "").startswith("ddc_"):
+                continue  # DDC steps measure the panel at other monitor settings
+            if r.get("r") and not r["r"] == r["g"] == r["b"] == r["code"]:
+                continue  # per-channel search patches are not the grey response
             code, Y = int(r["code"]), float(r["Y_cdm2"])
             pts.setdefault(code, []).append(Y)
     pts = sorted((c, sum(v) / len(v)) for c, v in pts.items())

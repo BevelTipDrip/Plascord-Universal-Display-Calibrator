@@ -19,7 +19,7 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 | 1 | HDR patches are written as R10G10B10A2 in `DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020`, so the PQ codes reach the display unchanged (no SDR-to-HDR mapping) | A patch drawn in SDR inside Windows HDR goes through Windows' sRGB mapping and measures the mapping, not the panel | `SetColorSpace1` in the generator; BevelTipDrip's requirement (2026-11-18) |
 | 2 | The generator refuses to run when the output is not in HDR (`ERROR Windows HDR is off`) | Patches would be SDR | `IDXGIOutput6` colour-space check |
 | 3 | Values are quantized to whole 10-bit codes before drawing, and the reply names the code drawn (`OK <pq> <code10>`) | The probe's target would not match the patch | `main()` loop |
-| 4 | Stdin protocol: `N <nits> <area>`, `P <pq 0-1> <area>`, `B` (background), `Q`; `READY` at start, `OK` after 4 presented frames | The probe hangs or reads the previous patch | `HdrGenerator` in the probe |
+| 4 | Stdin protocol: `N <nits> <area>`, `P <pq 0-1> <area>`, `C <r> <g> <b> <area>` (10-bit codes per channel), `B` (background), `Q`; `READY` at start, `OK` after 4 presented frames | The probe hangs or reads the previous patch | `HdrGenerator` in the probe |
 | 5 | The display is held awake while the generator runs | Display slept mid-run (2026-11-18) | `SetThreadExecutionState` |
 
 ## 3. Before every test

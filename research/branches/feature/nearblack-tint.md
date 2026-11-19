@@ -26,15 +26,17 @@ Peak 1000 after Q-2. Out of scope: SDR (Q-7), gamut / saturation (the Windows HD
 | What | Where | Changes something others use? |
 |---|---|---|
 | RGB patch command (per-channel 10-bit codes) | `tools/hdrgen/hdr10_patchgen.cpp` | yes: the generator's stdin protocol gains a command; existing ones unchanged |
-| Per-channel measurement mode (grey plus channel offsets) | `tools/nearblack_probe.py` | yes: CSV gains per-channel code columns; existing columns unchanged |
+| Per-channel search mode (`--search`) | `tools/nearblack_probe.py` | yes: CSV gains `r`, `g`, `b` columns; existing columns unchanged |
+| Skip non-grey rows when fitting | `tools/build_mhc2.py` | no: same output for existing CSVs |
 | Probe option to measure greys at given DDC/CI RGB gains (restored after) | `tools/nearblack_probe.py` | yes: new option; existing options unchanged |
 | Per-channel LUT solver | `tools/build_mhc2.py` | yes: new options; default output unchanged until decided |
 | Plan, test write-ups, data, profiles | `research/docs/`, `profiles/` | no |
 
 ## State
 
-Planning: [plan-nearblack-tint.md](../../docs/plan-nearblack-tint.md) written, approach proposed, waiting for
-BevelTipDrip's answer before code. Last updated 2026-11-18 by BevelTipDrip (with Claude).
+Generator `C` command and probe `--search` built (checked in simulation, not run); `--ddc-steps` built, not run
+(DDC route dropped, BevelTipDrip 2026-11-18). Next: search run (T-NT1) once the preset is chosen and a go is given.
+Last updated 2026-11-18 by BevelTipDrip (with Claude).
 
 ## Conflicts with other branches
 
@@ -53,3 +55,5 @@ corrected near black on screen.
 ## Log
 
 - 2026-11-18 BevelTipDrip (with Claude): started from main @ 1b1783f; plan doc written.
+- 2026-11-18: target D65 for the whole grey scale; `--ddc-steps` built; DDC route dropped (hue/saturation only);
+  generator `C` command and `--search` built.

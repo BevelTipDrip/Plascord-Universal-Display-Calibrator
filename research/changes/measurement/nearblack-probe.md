@@ -6,11 +6,11 @@ status: active
 default: n/a
 origin: ours (averaging rule from HCFR, arthur-liberman/hcfr-code ArgyllMeterWrapper.cpp)
 owner: BevelTipDrip
-commits: c491027
+commits: c491027, 6feab98
 prs:
 queue: Q-1, Q-6, Q-7, Q-9
 files: tools/nearblack_probe.py
-symbols: pq10, read_meter, adapt_reads, measure, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS
+symbols: pq10, read_meter, adapt_reads, measure, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS, rgb_search, search_cost, duv, solve3, xyz_of, SEARCH_CODES
 switches:
 tests: T-NB1, T-NB3, T-NB9
 docs: measurement-reference.md, plan-hdr-nearblack-lut.md#design
@@ -28,7 +28,10 @@ ArgyllCMS `spotread -O` (with a meter correction), averages 1-5 readings by HCFR
 y against the exact target of the code sent. It reads a reference (100 nits / white) before the sweep, every 25
 patches and at the end. `--ddc-steps` (or the older `--ddc-sweep`, black level on all channels) measures
 `--ddc-levels` at each of several DDC/CI settings (per-channel gain 16/18/1A, black level 6C/6E/70). It writes
-`research/docs/data/nearblack-<label>-<date>.csv`.
+`research/docs/data/nearblack-<label>-<date>.csv`. `--search` instead finds, for each of `--search-codes`, the
+per-channel codes (generator `C`) whose light is closest to that input's PQ luminance at `--white` (D65): it
+measures how X, Y, Z move per code of each channel, takes Newton steps to the target, and keeps the best reading
+by `search_cost` (colour in u'v', luminance in log, too bright x`--raised-weight`). Rows carry `r`, `g`, `b`.
 
 ## Invariants
 
@@ -38,7 +41,10 @@ patches and at the end. `--ddc-steps` (or the older `--ddc-sweep`, black level o
 - `finally:` restores the gamma ramp and every DDC/CI value it changed, and closes the generator.
 - DDC/CI writes only the codes in `DDC_VCPS`, only within the maximum the monitor reports, and every value is
   restored before the end reference, so the drift check compares the same settings.
-- A CSV with DDC steps holds rows measured at other settings: never build a profile from it (Landmines).
+- A CSV with DDC steps or search rows holds non-grey readings: `build_mhc2.py` skips rows whose `run` starts with
+  `ddc_` or whose `r`, `g`, `b` are not all equal to `code`; keep those column names.
+- `--search` must run with an identity (uncorrected) HDR profile: the codes it finds are the LUT's outputs, so a
+  LUT already in the pipeline would be applied twice.
 - `data_path` never overwrites a file; the label (test ID) is in the name.
 - `build_mhc2.py` reads the CSV columns by name (`mode`, `code`, `Y_cdm2`): rename them only together.
 - The display is held awake from `main()` on (`SetThreadExecutionState`).
@@ -54,7 +60,10 @@ patches and at the end. `--ddc-steps` (or the older `--ddc-sweep`, black level o
 - T-NB1 to T-NB9 (2026-11-18) ran with it; T-NB9 reference drift +0.4%.
 - `data_path` naming: built, checked by calling it (2026-11-18); not used in a measurement run yet.
 - `--ddc-steps`: built 2026-11-18, checked with fake meter / generator / DDC calls (restores to the saved values
-  before the end reference; rejects unknown VCP codes); not run on the monitor yet (T-NT1).
+  before the end reference; rejects unknown VCP codes); not run on the monitor yet.
+- `--search`: built 2026-11-18, checked on a simulated panel (green lagging near black, light changing every 3
+  codes below code 60): all 24 default codes within 0.0045 Delta u'v' of D65, luminance 0.90-1.03x near black and
+  1.00x from 0.1 nit up, 184 readings. Not run on the monitor yet (T-NT1).
 
 ## History and pitfalls
 

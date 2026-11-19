@@ -1,7 +1,7 @@
 # Plan: bring the AW3225QF's grey scale to D65 at every level, near black included
 
-Status: planned 2026-11-18, nothing built; target decided (D65), mechanism proposed, waiting for BevelTipDrip's
-answer before code. Parent: [START-HERE.md](START-HERE.md). Owner: BevelTipDrip. Branch: `feature/nearblack-tint`
+Status: target decided (D65); generator `C` command and probe `--search` built 2026-11-18 (checked in simulation),
+not run. Parent: [START-HERE.md](START-HERE.md). Owner: BevelTipDrip. Branch: `feature/nearblack-tint`
 ([reference file](../branches/feature/nearblack-tint.md)). Work queue: Q-1. Read
 [profiles-reference.md](profiles-reference.md), [measurement-reference.md](measurement-reference.md) and
 [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) first. (The file name predates the wider scope.)
@@ -53,27 +53,31 @@ AW3225QF ccmx):
   10-bit codes (T-NB7). One 10-bit code is about 1-3% of luminance in the 1-100 nit range.
 - Grey readings cannot say how each channel behaves alone: building a per-channel correction needs new data [I].
 
-## Design (proposed 2026-11-18; BevelTipDrip to confirm)
+## Design (2026-11-18)
 
-Two mechanisms, for the two parts:
+Everything goes into the HDR profile's three LUTs, solved by measurement level by level (BevelTipDrip chose this
+over the monitor's controls, Decisions):
 
-1. **Whole-scale lean: the monitor's own RGB gain (DDC/CI), if it works in HDR.** Lowering red and blue a few
-   steps would raise y at every level, with no 10-bit rounding. Done in the **Custom Color HDR** preset (Decisions).
-   Test it first (T-NT1): greys at 0.1, 1, 10 and 100 nits at gains as found, red 96, blue 96, as found again
-   (`--ddc-steps`, restored after); then the same for black level. If the preset ignores the gains,
-   the lean goes into the profile instead: either the MHC2 matrix (a per-channel scale, continuous) or the
-   per-channel LUTs below.
-2. **Level-dependent part: per-channel LUTs.**
-   - The generator gets a command `C <r> <g> <b> <area>` (three 10-bit PQ codes); the existing commands stay.
-   - Offset run (T-NT2): at about 15 grey levels from the lowest lit step to ~200 nits, read the grey, then green
-     +1/+2 codes, red and blue -1. That gives how Y, x and y move per code of each channel at each level.
-     About 150 patches, ~2 h at the current speed (Q-9 would shorten it).
-   - Solver in `build_mhc2.py`: for each input code, per-channel output codes (each a whole code + 0.25) that
-     bring xy closest to D65 at the PQ target luminance; each channel's LUT non-decreasing.
-   - Errors weighed with the crushed-over-raised preference (Decisions): a too-bright error counts double.
-3. **Verify** (T-NT3): standard run with luminance and xy, then BevelTipDrip checks greys on screen.
+1. **Patches with separate channel codes**: generator command `C <r> <g> <b> <area>` (built).
+2. **Search per input level** (`nearblack_probe.py --search`, built): for each of 24 input codes from 31 (0.02 nit)
+   to 520 (100 nits), with an identity HDR profile active:
+   - start from the grey code that gives the input's PQ luminance (`--response` = a dense grey run of the preset);
+   - measure each channel raised by a few codes (the step doubles until the change is above the meter's noise),
+     which gives how X, Y, Z move per code;
+   - take Newton steps to the target XYZ (the input's luminance at D65), rounded to whole codes, at most 12 codes
+     per channel per step; re-measure the slopes only after a step that made things worse;
+   - keep the reading with the lowest cost: colour in u'v' (tolerance 0.002), luminance in log (tolerance 3%), a
+     too-bright error counted `--raised-weight` times (default 2).
+   On a simulated panel with coarse near-black steps: all 24 codes within 0.0045 Delta u'v', luminance 0.90-1.03x
+   near black and 1.00x from 0.1 nit up, 184 readings (about 30 min on the real meter) [V in simulation only].
+3. **Build** (next, after T-NT1): per-channel LUTs from the best codes (interpolated between solved inputs, each a
+   whole code + 0.25, non-decreasing per channel; below the lowest solved input a ramp; above the highest, the
+   offsets kept and eased off before the top so nothing clips).
+4. **Verify** (T-NT2): standard run with luminance and xy, then BevelTipDrip checks greys on screen.
 
 Alternatives considered:
+- The monitor's OSD / DDC/CI colour controls: not pursued. The only HDR preset with colour controls (Custom Color
+  HDR) has hue and saturation, not a grey-scale white balance (Decisions).
 - The MHC2 matrix alone: it applies equally at every level, so it cannot fix the part that grows toward black.
 - Measuring each primary alone near black: single-channel light there is mostly under the meter's floor.
 - Offsetting channels by eye: not repeatable; the project measures.
@@ -82,10 +86,9 @@ Alternatives considered:
 
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
-| NT1 | Probe `--ddc-steps` (built, checked with fakes); gain and black-level test in Custom Color HDR | n/a | T-NT1 | built, not run |
-| NT2 | Generator `C` command + probe offset mode; offset run in True Black 400 with v2 active | n/a | T-NT2 | not started |
-| NT3 | Per-channel solver (+ global gain or matrix, per NT1); True Black 400 v3 profile; verify | new option, default off | T-NT3 | not started |
-| NT4 | Peak 1000, after Q-2 | n/a | | not started |
+| NT1 | Generator `C` command; probe `--search`; search run in the chosen preset with an identity profile | n/a | T-NT1 | built (checked in simulation), not run |
+| NT2 | Per-channel LUTs from the search in `build_mhc2.py`; profile v3; verify run; on-screen check | new option, default off | T-NT2 | not started |
+| NT3 | The other preset(s), if wanted | n/a | | not started |
 
 ## Risks
 
@@ -94,15 +97,17 @@ Alternatives considered:
 - Raising green adds light: luminance and colour are solved together; the lowest inputs may lose a little
   luminance accuracy (accepted, Decisions).
 - Hitting D65 exactly depends on the ccmx (another unit's correction).
-- DDC/CI gain changes the monitor for everything; restoring must be reliable (the probe restores in `finally:`).
+- The search must run with an identity HDR profile; with the v2 LUT active the codes would be corrected twice.
 - Measurement time; meter noise in xy under ~0.03 nit.
 - Not tested: content in motion; other presets until NT4.
 
 ## Decisions
 
-- Calibrate in the OSD preset **Custom Color HDR** (about 450 nits peak), the only HDR preset with colour
-  controls, through DDC/CI (BevelTipDrip, 2026-11-18: "I am fine with 450 nits, this monitor can't do well with 1000
-  anyway, so I can set it to the custom mode and we can try calibrating it with the DDC commands").
+- Not through the monitor's colour controls: Custom Color HDR (about 450 nits peak) is the only HDR preset with
+  them, and they are hue and saturation only (BevelTipDrip, 2026-11-18: "this monitor only has "hue" and
+  "saturation" so I don't believe we're going to get the results we need without effecting other areas, because
+  it's not linear"). Earlier the same day: "I am fine with 450 nits, this monitor can't do well with 1000 anyway".
+  The probe's `--ddc-steps` stays for later tests (Q-6).
 - Target **D65 (0.3127/0.3290) at every level** of the grey scale, not the panel's own grey (BevelTipDrip,
   2026-11-18: "we should probably fix that and target d65").
 - A little luminance error near black is acceptable to get the colour right; prefer a step slightly too dark over
@@ -114,6 +119,5 @@ Alternatives considered:
 ## Open questions
 
 - The strength of the crushed-over-raised weighting (BevelTipDrip).
-- Whether DDC/CI RGB gain and black level act in Custom Color HDR (T-NT1).
-- Does Custom Color HDR replace True Black 400 as the everyday preset, and is Peak 1000 (Q-2) still wanted
-  (BevelTipDrip)?
+- Which preset to calibrate first (True Black 400, with its dense data and v2 profile, or Custom Color HDR), and is
+  Peak 1000 (Q-2) still wanted (BevelTipDrip)?

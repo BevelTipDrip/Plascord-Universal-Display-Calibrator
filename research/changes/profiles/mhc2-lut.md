@@ -22,7 +22,8 @@ checked:
 ---
 ## What it does
 
-`tools/build_mhc2.py --csv <dense run> --name <profile name> [--peak N]` averages the HDR rows per code, keeps
+`tools/build_mhc2.py --csv <dense run> --name <profile name> [--peak N]` averages the grey HDR rows per code
+(skipping DDC-step and per-channel search rows), keeps
 readings at or above `--floor` (0.008), fits a monotone curve (pool adjacent violators) and inverts it in log
 space: for each of 1024 input codes, the output code whose measured light equals the input's PQ luminance. Below
 the first solvable input it ramps linearly from 0; between `--blend-start` and `--blend-end` (20-30 nits) it
