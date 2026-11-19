@@ -49,12 +49,14 @@ A package `tools/ddc/` (name: open question 1), standard library only, Python 3.
 
 | File | What |
 |---|---|
-| `backend.py` | `Backend` interface, `MonitorInfo`, `VcpReply`, `DdcError`, `parse_vcp_code`, `VCP_NAMES` |
+| `backend.py` | `Backend` interface, `MonitorInfo`, `VcpReply`, `DdcError`, `parse_vcp_code`, `VCP_NAMES`, `Backend.wait` (the pause between requests) |
+| `mccs.py` | `MCCS_NAMES`: the MCCS 2.2a standard VCP names 00-DF (from ddcutil's feature table, which follows the VESA document), `WRITE_ONLY`, `mccs_name` (E0-FF: "manufacturer specific") |
 | `windows.py` | `Dxva2Backend`: dxva2 through ctypes with `argtypes`; owns and destroys its physical-monitor handles; error messages carry the Windows error code |
-| `fake.py` | `FakeBackend` / `FakeMonitor`: in-memory monitors with failure injection (reads that fail, writes that fail or are ignored) and a log of every write |
-| `safety.py` | `SafeDdc`: the only way the package writes. Whitelist, range check, read back, `preserve()` save-and-restore |
+| `fake.py` | `FakeBackend` / `FakeMonitor`: in-memory monitors with failure injection (reads that fail, writes that fail or are ignored, codes that answer 0 of 0), a VCP type per code, and logs of every write, read and wait |
+| `safety.py` | `SafeDdc`: the only way the package writes. Never list, whitelist, range check, read back, `preserve()` save-and-restore, `restore()` |
+| `scan.py` | `scan()`: read-only discovery of every code 00-FF against the capabilities string; table, CSV, JSON |
 | `caps.py` | `parse_capabilities`: the MCCS capabilities string -> model, MCCS version, VCP codes and their allowed values |
-| `cli.py`, `__main__.py` | `list`, `caps`, `get <vcp>...`, `set <vcp> <value>` (dry run unless `--yes`) |
+| `cli.py`, `__main__.py` | `list`, `caps`, `get <vcp>...`, `scan [<vcp>...] [--csv F] [--json F]`, `set <vcp> <value> [--allow <vcp>,...]` (dry run unless `--yes`) |
 | `tests/` | `unittest` tests on the fake backend |
 
 Backend interface (every backend, Windows now, Linux later):
@@ -119,6 +121,28 @@ Alternatives considered:
    `RestoreFailed` with "reset it in the OSD".
 6. **The raw `set_vcp` is never called outside `safety.py`** (a test greps for it).
 
+### Read-only discovery: `scan` (D2b)
+
+BevelTipDrip's goal is to control every setting the monitor exposes, hidden ones included (Decisions). The first
+step only reads: `python -m ddc scan` asks for the capabilities string, then sends Get VCP Feature for every code
+00 to FF, waiting at least 50 ms before each request (MCCS timing; `--interval` may be longer, never shorter). Per
+code it records whether the monitor replied, the VCP type (momentary or set parameter), current and max, whether
+the capabilities string lists the code (and the values it lists), and the MCCS 2.2a name. The table shows the codes
+that replied or are listed (`--all`: every code) and ends with two lists: **hidden-setting candidates** (reply, not
+in the capabilities string) and codes listed but silent. `--csv FILE` and `--json FILE` write the whole result;
+neither ever overwrites a file.
+
+- **It cannot write** [V by the tests; I for the hardware]: it calls only `capabilities` and `get_vcp`; a test runs
+  it on a backend whose `set_vcp` fails the test. In MCCS, Get VCP Feature (opcode 01) and Set VCP Feature (03)
+  are different requests, so reading 04 (restore factory defaults) asks for a value and cannot trigger the reset
+  [I, from the protocol; ddcutil's `getvcp` and `scan` read every code the same way].
+- **A reply is not proof a control exists**: some monitors answer 0 of 0 (flagged "may be unsupported"), or answer
+  codes they ignore on write. What a hidden code does is found later, one code at a time, with a go for each
+  write (T-DDC3 and after).
+- Risks of reading [I]: on the AW3423DWF, constant DDC/CI polling made the OSD disappear (Twinkle Tray issue 536);
+  one scan is 257 requests, not constant polling. Do not scan during a measurement run.
+- Run time on the AW3225QF: unknown; at 50 ms plus each read's own time, a few seconds to a minute or two.
+
 ### How it is tested (project rule: every module brings its own tests)
 
 - **Deterministic, no hardware** (`python -m unittest discover -s tools/ddc/tests -t tools`): every safety rule
@@ -171,7 +195,7 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 | D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built `e40689f` (62 tests pass, 2026-11-19) |
 | D1b | Brightness 10 and contrast 12 writable by default; `--allow`; the never list; old value put back after a failed `set` | none | unit tests | built (this branch, 2026-11-19; commit in the card) |
 | D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, twice, below) |
-| D2b | Read-only discovery: `scan` of 00-FF, MCCS names | | T-DDC2 | not started |
+| D2b | Read-only discovery: `scan` of 00-FF, MCCS names | none | unit tests; T-DDC2 | built (unit tests, 2026-11-19); T-DDC2 not run |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC3 | not started (needs a go) |
 | D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | a probe `--ddc-steps` run | not started |
 | D5 | Linux backend | | unit tests on a fake I2C device; a Linux machine | not started |
@@ -225,9 +249,10 @@ Everything still under Open questions was assumed by a drafting agent (2026-11-1
 4. **Linux: own I2C code or ddcutil?** Assumed: design only, decide when Linux starts (Q-14).
 5. ~~The write whitelist.~~ Answered: yes to 10 and 12, yes to codes beyond the list (Decisions).
 6. **Read back: exact match, or a tolerance?** Assumed exact: any other value raises.
-7. **CLI shape.** Assumed `list`, `caps`, `get <vcp>...`, `set <vcp> <value>` with a dry run unless `--yes`; codes
-   in hex (`6C`, `0x6C`), values in decimal, like the probe's `--ddc-steps`. Wanted: `--json` output (for Q-13),
-   a `restore` command, a `sweep` command?
+7. **CLI shape.** Assumed `list`, `caps`, `get <vcp>...`, `scan`, `set <vcp> <value> [--allow ...]` with a dry
+   run unless `--yes`; codes in hex (`6C`, `0x6C`), values in decimal, like the probe's `--ddc-steps`. `scan` has
+   `--csv` / `--json` files; `get` and `caps` print text only. Wanted: `--json` on every command (for Q-13), a
+   `restore` command, a `sweep` command?
 8. **Restore all saved codes, or only the ones that changed?** Assumed all (as the probe does).
 9. **The CI job.** Assumed a second workflow, `unit-tests`, running the tests on every push and pull request,
    next to `docs-check`. Keep it, or run the tests only locally? Still open: BevelTipDrip asked what a CI job is

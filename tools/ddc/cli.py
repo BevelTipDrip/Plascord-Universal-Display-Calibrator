@@ -3,6 +3,7 @@
     python -m ddc list                              # monitors DDC/CI can reach
     python -m ddc caps [--raw]                      # what the monitor says it supports
     python -m ddc get 10 12 6C                      # read VCP codes (hex): current and max
+    python -m ddc scan --csv FILE --json FILE       # read every code 00-FF (read only), compare with caps
     python -m ddc set 6C 48                         # dry run: checks and prints, writes nothing
     python -m ddc set 6C 48 --yes                   # write, then read back (only with a person's go)
     python -m ddc set 14 5 --allow 14 --yes         # a code beyond the whitelist: --allow names it (and a go)
@@ -17,11 +18,13 @@ another value, it writes the old value back.
 Exit status: 0 ok, 1 a DDC/CI error, 2 refused or bad arguments.
 """
 import argparse
+import os
 import sys
 
 from .backend import DdcError, open_backend, parse_vcp_code, vcp_name
 from .caps import parse_capabilities
 from .safety import DEFAULT_WRITE_WHITELIST, NEVER_WRITE, RestoreFailed, SafeDdc, WriteRefused
+from .scan import MIN_INTERVAL, scan, table, write_csv, write_json
 
 
 def _code(text):
@@ -55,6 +58,16 @@ def build_parser():
     p.add_argument("--raw", action="store_true", help="print the string as the monitor sent it")
     p = sub.add_parser("get", parents=[common], help="read VCP codes (hex)")
     p.add_argument("codes", nargs="+", type=_code, metavar="VCP")
+    p = sub.add_parser("scan", parents=[common], help="read every VCP code 00-FF (Get only, never Set) and "
+                       "compare with the capabilities string; codes that reply but are not listed are hidden-setting "
+                       "candidates")
+    p.add_argument("codes", nargs="*", type=_code, metavar="VCP", help="only these codes (default: 00 to FF)")
+    p.add_argument("--interval", type=float, default=MIN_INTERVAL,
+                   help="seconds between requests, at least %.2f (MCCS timing; default %.2f)"
+                        % (MIN_INTERVAL, MIN_INTERVAL))
+    p.add_argument("--all", action="store_true", help="print every code, not only those that reply or are listed")
+    p.add_argument("--csv", metavar="FILE", help="also write one row per code to FILE (never overwritten)")
+    p.add_argument("--json", metavar="FILE", help="also write the whole result to FILE (never overwritten)")
     p = sub.add_parser("set", parents=[common], help="write one whitelisted VCP code (dry run unless --yes)")
     p.add_argument("code", type=_code, metavar="VCP")
     p.add_argument("value", type=int, help="decimal value, 0..the monitor's max")
@@ -112,6 +125,29 @@ def _get(be, args):
     return status
 
 
+def _scan(be, args):
+    if args.interval < MIN_INTERVAL:
+        raise WriteRefused("--interval %.3f is below %.2f s (MCCS timing)" % (args.interval, MIN_INTERVAL))
+    for path in (args.csv, args.json):
+        if path and os.path.exists(path):
+            raise WriteRefused("%s exists; a scan never overwrites a file, give it a new name" % path)
+    index = _pick(be, args)
+    codes = args.codes or range(0x100)
+    tty = sys.stderr.isatty()
+    progress = (lambda c: print("\rreading VCP %02X" % c, end="", file=sys.stderr, flush=True)) if tty else None
+    result = scan(be, index, codes, args.interval, progress=progress)
+    if tty:
+        print("\r" + " " * 20 + "\r", end="", file=sys.stderr)
+    print(table(result, args.all))
+    if args.csv:
+        write_csv(result, args.csv)
+        print("CSV: %s" % args.csv)
+    if args.json:
+        write_json(result, args.json)
+        print("JSON: %s" % args.json)
+    return 0
+
+
 def _set(be, args):
     index = _pick(be, args)
     whitelist = dict(DEFAULT_WRITE_WHITELIST)
@@ -142,7 +178,7 @@ def _set(be, args):
     return 0
 
 
-COMMANDS = {"list": _list, "caps": _caps, "get": _get, "set": _set}
+COMMANDS = {"list": _list, "caps": _caps, "get": _get, "scan": _scan, "set": _set}
 
 
 def main(argv=None, backend=None):

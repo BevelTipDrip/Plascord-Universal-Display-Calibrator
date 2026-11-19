@@ -5,40 +5,14 @@ code, and returns the capabilities string. Only ddc.safety.SafeDdc calls set_vcp
 rule 6); everything else goes through SafeDdc too.
 """
 import sys
+import time
 from typing import List, NamedTuple
 
-# Names of common MCCS 2.x VCP codes, for messages. Reading any code is allowed; writing is limited by
-# ddc.safety.DEFAULT_WRITE_WHITELIST.
-VCP_NAMES = {
-    0x02: "new control value",
-    0x04: "restore factory defaults",
-    0x05: "restore factory luminance/contrast",
-    0x08: "restore factory colour",
-    0x10: "brightness (luminance)",
-    0x12: "contrast",
-    0x14: "colour preset",
-    0x16: "red gain",
-    0x18: "green gain",
-    0x1A: "blue gain",
-    0x52: "active control",
-    0x60: "input source",
-    0x62: "audio volume",
-    0x6C: "red black level",
-    0x6E: "green black level",
-    0x70: "blue black level",
-    0xAC: "horizontal frequency",
-    0xAE: "vertical frequency",
-    0xB2: "flat panel sub-pixel layout",
-    0xB6: "display technology type",
-    0xC6: "application enable key",
-    0xC8: "display controller type",
-    0xC9: "display firmware level",
-    0xCA: "OSD / button control",
-    0xCC: "OSD language",
-    0xD6: "power mode",
-    0xDC: "display mode",
-    0xDF: "VCP version",
-}
+from .mccs import MCCS_NAMES, mccs_name
+
+# Names of the MCCS 2.2a VCP codes (ddc.mccs), for messages. Reading any code is allowed; writing is limited by
+# ddc.safety (never list, whitelist).
+VCP_NAMES = MCCS_NAMES
 
 
 class DdcError(Exception):
@@ -58,7 +32,8 @@ class VcpReply(NamedTuple):
 
 
 def vcp_name(code: int) -> str:
-    return VCP_NAMES.get(code, "unknown")
+    """The MCCS 2.2a name ('manufacturer specific' for E0-FF)."""
+    return mccs_name(code)
 
 
 def parse_vcp_code(text) -> int:
@@ -99,6 +74,10 @@ class Backend:
 
     def close(self) -> None:
         pass
+
+    def wait(self, seconds: float) -> None:
+        """Pause between DDC/CI requests (ddc.scan). The fake backend records it instead of sleeping."""
+        time.sleep(seconds)
 
     def __enter__(self):
         return self

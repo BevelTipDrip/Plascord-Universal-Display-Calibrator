@@ -9,8 +9,8 @@ owner: BevelTipDrip
 commits: e40689f
 prs:
 queue: Q-20
-files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
-symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main
+files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
+symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main, MCCS_NAMES, WRITE_ONLY, mccs_name, scan, ScanRow, ScanResult, MIN_INTERVAL, write_csv, write_json
 switches:
 tests:
 docs: plan-ddc-module.md#design, ddc-reference.md
@@ -28,8 +28,10 @@ dxva2 through ctypes, with argtypes, owned handles and Windows error text) and `
 failure injection and a write log). `SafeDdc` is the only caller of `set_vcp`: never list (`NEVER_WRITE` plus a
 display module's), whitelist (default 10 / 12, 16 / 18 / 1A, 6C / 6E / 70), 0..max read from the monitor, read
 back; `preserve(codes)` saves then restores on any exit; `restore(saved)` puts back values a caller saved.
-`python -m ddc list | caps | get | set` (from `tools/`); `set` is a dry run unless `--yes`, `--allow` widens the
-whitelist for one call, and a failed or mismatched write is put back.
+`python -m ddc list | caps | get | scan | set` (from `tools/`); `set` is a dry run unless `--yes`, `--allow` widens
+the whitelist for one call, and a failed or mismatched write is put back. `scan` reads every code 00-FF, at least
+50 ms apart, against the capabilities string; codes that reply but are not listed are hidden-setting candidates.
+Names: MCCS 2.2a (`mccs.py`).
 
 ## Invariants
 
@@ -46,6 +48,8 @@ whitelist for one call, and a failed or mismatched write is put back.
 - `cli._set` writes only with `--yes`; exit 2 = refused, nothing written. `--allow` codes go through the same
   `SafeDdc` (never list, range, read back); after a failed or mismatched write it calls `restore` with the value
   read just before.
+- `scan` calls only `capabilities` and `get_vcp`, calls `wait(>= MIN_INTERVAL)` before every read, and opens its
+  CSV / JSON with mode `"x"` (never overwrites).
 - `windows.py` touches no Windows API at import; `Dxva2Backend()` raises `DdcError` off Windows.
 - `error_text` passes dxva2's 0xC026xxxx codes to `FormatError` signed (unsigned raises OverflowError).
 
@@ -62,6 +66,8 @@ whitelist for one call, and a failed or mismatched write is put back.
   3.14, Windows, 2026-11-19 (`python -m unittest discover -s tools/ddc/tests -t tools`).
 - 2026-11-19 (second session): 10 / 12 writable, `--allow`, the never list, put-back after a failed `set`:
   built, 82 run, 0 failures, 1 skipped (Python 3.8.10, Windows). Fake backend only.
+- 2026-11-19: `scan`, MCCS names: built, 105 run, 0 failures, 1 skipped (Python 3.8.10 and 3.14, Windows), fake
+  backend only.
 - Not run against a monitor: on 2026-11-19 the AW3225QF was not reachable (`list` found only `WinDisc`,
   error 0xC02625E5). No write has been sent to any real display.
 
