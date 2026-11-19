@@ -40,11 +40,11 @@ Last updated 2026-11-18 by BevelTipDrip (with Claude).
 
 ## Conflicts with other branches
 
-Checked 2026-11-18 with `changemap.py branches`.
+Checked 2026-11-18 and 2026-11-19 with `changemap.py branches`.
 
 | Branch | Owner | Overlap (files, areas, interfaces) | Plan | Agreed with |
 |---|---|---|---|---|
-| none | | | | |
+| feature/ddc-module | BevelTipDrip (with Claude) | `tools/ddc/` ports the DDC/CI code in `tools/nearblack_probe.py`; both edit `plan-work-queue.md`, `START-HERE.md` | Merged into this branch 2026-11-19 (4dd9353), then feature/ddc-module fast-forwarded to it, so DDC work continues on top of this branch and merges back here, not into main. Queue and index rows: keep both sides. The probe may switch to `tools/ddc/` on feature/ddc-module; this branch does not edit the probe's DDC code meanwhile | BevelTipDrip, 2026-11-19: "Should we merge the DDC branch into ours instead of into the main repo? Branching off of our working repo probably would have made more sense."; "Each branch doesn't have to be a seperate change entirely, it can be a set of changes, we just have to merge cleanly." |
 
 ## Merge plan
 
@@ -57,3 +57,4 @@ corrected near black on screen.
 - 2026-11-18 BevelTipDrip (with Claude): started from main @ 1b1783f; plan doc written.
 - 2026-11-18: target D65 for the whole grey scale; `--ddc-steps` built; DDC route dropped (hue/saturation only);
   generator `C` command and `--search` built.
+- 2026-11-19: feature/ddc-module (Q-20) merged in (4dd9353; conflicts were side-by-side rows, both kept; check 0 errors, 62 ddc tests OK). DDC work continues on feature/ddc-module and merges back here.
