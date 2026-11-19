@@ -1,0 +1,31 @@
+# changemap.py facts: regenerated from local git state by check and lookups
+research/changes/_facts/
+
+__pycache__/
+*.pyc
+
+# Secrets never go in the repo
+.env
+.env.*
+*.pem
+*.key
+
+# Personal agent settings
+.claude/settings.local.json
+
+# Third-party files each person installs (research/docs/building-and-tools.md): never committed
+tools/argyll/
+Monitor Software/
+
+# Build output
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# Local profiles that are not examples (diagnostic or superseded)
+profiles/AW3225QF TB400 near-black fix v1.icc
+profiles/DIAG half PQ.icc
+
+# Personal editor workspace
+*.code-workspace

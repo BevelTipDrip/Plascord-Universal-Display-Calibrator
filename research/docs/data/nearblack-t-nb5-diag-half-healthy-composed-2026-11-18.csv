@@ -1,0 +1,3 @@
+run,mode,requested,code,target_cdm2,Y_cdm2,Y_sd,x,y,reads
+diag_half_healthy_composed,hdr,100.0,520,100.22988553117673,92.623282,0.0,0.30944,0.321879,1
+diag_half_healthy_composed,hdr,10.0,307,10.050671237627252,10.238277,0.0,0.309491,0.319231,1
