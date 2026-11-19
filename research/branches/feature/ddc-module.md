@@ -9,7 +9,7 @@ areas: tooling
 files: tools/ddc/*, research/docs/plan-ddc-module.md, research/changes/ddc/*, research/tools/changemap.config.json, research/docs/building-and-tools.md, research/docs/plan-work-queue.md, research/docs/START-HERE.md, .github/workflows/*, research/docs/handoff-2026-11-19-ddc-module.md
 interfaces: new Python API and CLI in tools/ddc/ (nothing existing changes); a new change-map area "ddc" in changemap.config.json; a new CI workflow for unit tests
 work_queue: Q-20
-docs:
+docs: plan-ddc-module.md
 cards:
 ---
 ## Goal and scope
@@ -17,7 +17,7 @@ cards:
 Started 2026-11-19 by a Claude agent for BevelTipDrip, who asked (relayed by the lead agent): "launch a sub-agent to
 start the work to build a ddc/ci module". BevelTipDrip was away, so this branch is groundwork for review: a plan doc
 with every assumed decision listed as an open question, a small standard-library package, tests that need no
-hardware. Plan: plan-ddc-module.md (added in the next commit).
+hardware. Plan: [plan-ddc-module.md](../../docs/plan-ddc-module.md).
 
 In scope: backend interface, Windows dxva2 backend (ported from the probe's DDC/CI code), a fake in-memory backend,
 a safety layer (write whitelist, range check against the reported max, read back after every write, save and
