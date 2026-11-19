@@ -189,3 +189,21 @@ inneficient". Closing the generator made the probe abort normally and save every
 Verdict: replace the Newton search near black (proposed 2026-11-19: Q-19 check, then Q-9 speed, a per-channel step
 map with additive prediction choosing all near-black levels together, the search kept from ~0.2 nit up with a fresh
 start); waiting for BevelTipDrip's OK.
+
+## T-DRIFT1: the T-NT0 codes with the HDR Calibration profile (2026-11-19 ~01:20, run by Claude for BevelTipDrip, log `data/nearblack-t-drift1-hdrcal-profile-2026-11-19.csv`)
+
+One change since T-NT0's follow-up (23:40): BevelTipDrip switched the HDR profile back to `HDR Calibrated Profile
+11-18-2026 11563.icc` (confirmed by `set_hdr_profile.py --show`). Reference 93.35, stable.
+
+| Code | T-NB3 15:55, HDR Calibration | T-NT0 23:40, neutral | T-DRIFT1 01:20, HDR Calibration | vs T-NB3 | vs T-NT0 |
+|---|---|---|---|---|---|
+| 36 | 0.0579 | 0.0705 | 0.0650 | 1.12 | 0.92 |
+| 42 | 0.1051 | 0.1270 | 0.1169 | 1.11 | 0.92 |
+| 50 | 0.1517 | 0.1774 | 0.1658 | 1.09 | 0.93 |
+| 64 | 0.2292 | 0.2605 | 0.2462 | 1.07 | 0.94 |
+| 153 | 1.285 | 1.397 | 1.358 | 1.06 | 0.97 |
+
+(T-NB3 values at codes it did not measure are log-interpolated.) Mixed result: with the HDR Calibration profile near
+black reads 6-8% lower than with the neutral one 1.5 h earlier, more toward black, so BevelTipDrip's profile
+explanation may hold in part; but it is still 6-12% above the afternoon, so part of the change is not the profile.
+One run cannot separate profile from time: next, the neutral profile again right after, same codes (A/B).
