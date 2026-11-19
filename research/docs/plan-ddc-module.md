@@ -275,7 +275,7 @@ one probe `--ddc-steps` run on the monitor with a go (Q-6).
 | D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built `e40689f` (62 tests pass, 2026-11-19) |
 | D1b | Brightness 10 and contrast 12 writable by default; `--allow`; the never list; old value put back after a failed `set` | none | unit tests | built (this branch, 2026-11-19; commit in the card) |
 | D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, twice, below) |
-| D2b | Read-only discovery: `scan` of 00-FF, MCCS names | none | unit tests; T-DDC2 | built (unit tests, 2026-11-19); T-DDC2 not run |
+| D2b | Read-only discovery: `scan` of 00-FF, MCCS names | none | unit tests; T-DDC2 | built (unit tests, 2026-11-19); T-DDC2 planned, not run |
 | D2c | AW3225QF display module (skeleton): codes, value meanings, preset locks, safety classes, sources | none | unit tests; T-DDC2 fills it in | built (unit tests, 2026-11-19); entries not confirmed on this monitor except 16 18 1A 6C 6E 70 |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC3 | not started (needs a go) |
 | D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | `test_steps.py`; a probe `--ddc-steps` run | `parse_ddc_steps` built in the package (unit tests, 2026-11-19); the probe not switched (open question 13) |
@@ -350,6 +350,58 @@ Everything still under Open questions was assumed by a drafting agent (2026-11-1
     edit `run()` now, or wait until the `feature/nearblack-tint` probe work settles? ([How the probe would adopt
     it](#how-the-probe-would-adopt-it-d4-may-happen-on-this-branch-not-switched-yet).)
 
+## Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run)
+
+Written 2026-11-19 by the drafting agent for BevelTipDrip to run when back. **Read only: no command here writes
+to the monitor**, so no go is needed (START-HERE, Rules); nothing is changed in the OSD, HDR, profiles or the
+driver. T-DDC1 (list, caps, a few gets) and T-DDC2 (the full scan) run in one sitting, about five minutes. Test
+IDs: T-DDC1 and T-DDC2 are these reads; T-DDC3 is the first write (D3, needs a go).
+
+**Before:** the AW3225QF on and awake, in the preset it is normally used in (True Black 400, Windows HDR on); no
+measurement running; Dell Display Manager, Alienware Command Center, Twinkle Tray or any other DDC/CI tool closed
+(two programs talking DDC/CI at once are untested). Note the OSD preset and whether HDR is on. Open a terminal in
+`tools/` on `feature/ddc-module` (or wherever it has merged). Replace `<date>` with the day's date (`2026-11-20`).
+
+```
+python -m ddc list
+python -m ddc caps --monitor AW3225QF
+python -m ddc caps --raw --monitor AW3225QF
+python -m ddc get 10 12 14 16 18 1A 6C 6E 70 DC E2 F2 C9 --monitor AW3225QF
+python -m ddc scan --monitor AW3225QF --csv ../research/docs/data/ddc-t-ddc2-scan-<date>.csv --json ../research/docs/data/ddc-t-ddc2-scan-<date>.json
+python -m ddc get 10 12 14 16 18 1A 6C 6E 70 --monitor AW3225QF
+```
+
+The first `get` is T-DDC1, the `scan` is T-DDC2, the last `get` checks nothing moved. The scan's JSON keeps the
+raw capabilities string, so nothing needs to be copied by hand. If `list` shows the display under another name
+(e.g. "Generic PnP Monitor"), use `--index 0` instead of `--monitor AW3225QF`, and add `--display aw3225qf` to get
+the module's names. `get` prints `ERROR` for a code that does not answer and then exits 1: for E2, F2 or C9 that
+is a result, not a failure.
+
+**What to look for, and what each outcome would mean:**
+
+| Look at | Expected [I] | If not |
+|---|---|---|
+| `list` | One line naming the AW3225QF | Nothing: the display is off or asleep (the 2026-11-19 symptom, [ddc-reference.md](ddc-reference.md#4-symptom---first-place-to-look)). Two lines: pick with `--index` |
+| `caps`: model, MCCS version, codes | Model AW3225QF, MCCS 2.1, the codes of the AW3225QF in vdu_controls issue 84 ([module section](#aw3225qf-display-module-skeleton)) | Different codes: this unit's firmware differs from that one; the module's `in_caps` gets corrected from this run |
+| T-DDC1 `get`: 16 / 18 / 1A and 6C / 6E / 70 | 100 of 100 and 50 of 255, as on 2026-11-18 | Other values: something (a reset, a preset change) changed them since; note it, change nothing |
+| `get E2` | A number naming the preset (on the AW3423DWF: Desktop 39, DisplayHDR 58, Custom Color HDR 255) | An error: E2 is not readable here; otherwise this run gives the AW3225QF's number for True Black 400 |
+| `get F2` | 65 with HDR on (as on the AW3423DWF) | Another value: F2 means something else here |
+| scan summary: **"Hidden-setting candidates (reply, not in caps)"** | 6C 6E 70 (they answered on 2026-11-18 and the other unit's caps omit them) | Any other code there is a hidden-setting candidate: the list to study next, one code at a time (T-DDC3 onward, each write with a go). An empty list: this unit lists everything it answers |
+| scan: "In caps but no reply" | 04 05 08 (write-only in MCCS) and maybe 02 / 52 | Many more: reads are failing (timing, link); rerun with `--interval 0.1` before reading anything into it |
+| scan: notes "0 of 0: may be unsupported" | A few | Many E0-FF codes at 0 of 0: the monitor answers unsupported codes that way; they are not hidden settings |
+| C9 (display firmware level) | Any value | Recorded only: a firmware update between runs could explain a changed near-black curve (Q-19) |
+| The last `get` | The same numbers as T-DDC1 | Different: a read changed something, which MCCS does not allow; stop and report it |
+| The screen during the scan | Nothing visible | The OSD flickers or vanishes (seen on an AW3423DWF under constant polling): note it; the scan's interval can grow |
+
+**Optional, for the preset map (T-DDC2b):** change the OSD preset by hand to Custom Color HDR (a person changing
+their own OSD; no agent does it), then run the scan again into `ddc-t-ddc2b-scan-customcolorhdr-<date>.csv` /
+`.json`, and set the preset back. Comparing the two scans shows which codes follow the preset (E2, F0, 14, 10, 12
+on the AW3423DWF) and gives the AW3225QF's E2 numbers.
+
+**Writing it up:** a heading `## T-DDC2: ...` below (date, who ran it, commit, the two data files), the summary
+lines quoted, the hidden candidates listed. Then (an agent can do this from the JSON): set `in_caps` and
+`confirmed` in `tools/ddc/displays/aw3225qf.py` for every code read, and correct anything the run contradicts.
+
 ## Read-only check 2026-11-19: monitor not reachable
 
 Run by the drafting agent (Claude), branch `feature/ddc-module` before its first code commit, from `tools/`:
@@ -364,5 +416,4 @@ Run by the drafting agent (Claude), branch `feature/ddc-module` before its first
   (`windows.error_text`) and `list` prints each skipped display with the reason
   ([ddc-reference.md](ddc-reference.md#5-things-not-to-retry)).
 
-T-DDC1 (D2) is still to run: with the display on, `list`, `caps`, `get` of the same codes; compare 16 / 18 / 1A
-and 6C / 6E / 70 with the 2026-11-18 reads (100 of 100, 50 of 255).
+T-DDC1 (D2) and T-DDC2 (D2b) are still to run: [the plan for them](#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run).
