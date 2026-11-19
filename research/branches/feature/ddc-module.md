@@ -41,7 +41,7 @@ later, agreed with its owner); any write to a real display.
 
 Package built `e40689f` (D1). Second session (2026-11-19, Claude for BevelTipDrip, who was away): BevelTipDrip's
 answers recorded in the plan (Decisions); D1b built (10 / 12 writable, `--allow`, never list); D2b built (`scan`, MCCS 2.2a names); D2c built (AW3225QF display module skeleton, from public research). Next on this
-branch: the probe's switch to the package; T-DDC2 when BevelTipDrip is back. Not run on a
+branch: the probe's switch (parser built in the package; the probe not edited, plan open question 13); T-DDC2 when BevelTipDrip is back. Not run on a
 monitor: the AW3225QF was not reachable on 2026-11-19. Nothing written to any display. Last updated 2026-11-19 by
 Claude (for BevelTipDrip).
 
@@ -65,4 +65,4 @@ both sides). Merging needs BevelTipDrip's review and go.
 - 2026-11-19 Claude (for BevelTipDrip): started from main @ 1b1783f.
 - 2026-11-19 Claude: plan doc `808dd43`; package, tests, card, ddc area, CI workflow `e40689f`; read-only check
   on the real monitor not possible (only `WinDisc`). Handoff: handoff-2026-11-19-ddc-module.md.
-- 2026-11-19 Claude (second session, for BevelTipDrip): answers recorded; D1b built (write list, `--allow`, never list) `1a5b876`; D2b built (`scan`, MCCS names) `328832c`; D2c built (AW3225QF display module).
+- 2026-11-19 Claude (second session, for BevelTipDrip): answers recorded; D1b built (write list, `--allow`, never list) `1a5b876`; D2b built (`scan`, MCCS names) `328832c`; D2c built (AW3225QF display module) `43fc609`; D4 part built (`steps.parse_ddc_steps`), probe not switched (open question 13).

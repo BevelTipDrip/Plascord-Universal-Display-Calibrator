@@ -19,7 +19,8 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 | CLI (`python -m ddc`, from `tools/`) | `tools/ddc/cli.py` |
 | Unit tests | `tools/ddc/tests/` ([building-and-tools.md](building-and-tools.md#test)) |
 | Card | [ddc-module](../changes/ddc/ddc-module.md) |
-| The probe's own DDC/CI code (until it adopts this package) | `tools/nearblack_probe.py` on `feature/nearblack-tint` |
+| The probe's `--ddc-steps` parser, for its switch | `tools/ddc/steps.py` |
+| The probe's own DDC/CI code (until it adopts this package) | `tools/nearblack_probe.py` (not switched: plan open question 13) |
 
 ## 2. Invariants: must hold after every change
 

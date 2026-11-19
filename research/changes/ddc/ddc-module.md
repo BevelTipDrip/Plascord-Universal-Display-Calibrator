@@ -9,8 +9,8 @@ owner: BevelTipDrip
 commits: e40689f
 prs:
 queue: Q-20
-files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/displays/__init__.py, tools/ddc/displays/aw3225qf.py, tools/ddc/tests/test_displays.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
-symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main, MCCS_NAMES, WRITE_ONLY, mccs_name, scan, ScanRow, ScanResult, MIN_INTERVAL, write_csv, write_json, DisplayModule, Control, for_monitor, by_key
+files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/displays/__init__.py, tools/ddc/displays/aw3225qf.py, tools/ddc/tests/test_displays.py, tools/ddc/steps.py, tools/ddc/tests/test_steps.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
+symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main, MCCS_NAMES, WRITE_ONLY, mccs_name, scan, ScanRow, ScanResult, MIN_INTERVAL, write_csv, write_json, DisplayModule, Control, for_monitor, by_key, parse_ddc_steps, PROBE_VCPS
 switches:
 tests:
 docs: plan-ddc-module.md#design, ddc-reference.md
@@ -32,7 +32,8 @@ back; `preserve(codes)` saves then restores on any exit; `restore(saved)` puts b
 the whitelist for one call, and a failed or mismatched write is put back. `scan` reads every code 00-FF, at least
 50 ms apart, against the capabilities string; codes that reply but are not listed are hidden-setting candidates.
 Names: MCCS 2.2a (`mccs.py`). Per-model knowledge: `displays/` (AW3225QF skeleton: names, values, safety
-classes; its never codes join the core's).
+classes; its never codes join the core's). `steps.py`: the probe's `--ddc-steps` parser, for the probe's
+switch (not done: plan open question 13).
 
 ## Invariants
 
@@ -61,7 +62,8 @@ classes; its never codes join the core's).
 - [nearblack-probe](../measurement/nearblack-probe.md) has its own copy of this DDC/CI code on
   `feature/nearblack-tint`; it is meant to switch to this package after that branch merges (plan, D4). Until then
   the two copies can drift. Since 2026-11-19 the default whitelist is wider (10, 12) than the probe's `DDC_VCPS`;
-  the probe keeps its own six-code list and passes it as the whitelist when it switches.
+  the probe keeps its own six-code list (`steps.PROBE_VCPS`, same codes) and passes it as the whitelist when it
+  switches. `steps.parse_ddc_steps` must keep matching the probe's (`test_steps.py` golden table).
 
 ## Evidence
 
@@ -72,6 +74,8 @@ classes; its never codes join the core's).
 - 2026-11-19: `scan`, MCCS names: built, 105 run, 0 failures, 1 skipped (Python 3.8.10 and 3.14, Windows), fake
   backend only.
 - 2026-11-19: display modules: built, 124 run, 0 failures, 1 skipped (3.8.10, 3.14), fake backend only.
+- 2026-11-19: `steps.parse_ddc_steps`: built, same results and exceptions as the probe's on 23 recorded inputs;
+  129 run, 0 failures, 1 skipped (3.8.10, 3.14).
 - Not run against a monitor: on 2026-11-19 the AW3225QF was not reachable (`list` found only `WinDisc`,
   error 0xC02625E5). No write has been sent to any real display.
 

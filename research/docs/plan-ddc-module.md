@@ -227,25 +227,46 @@ program. Permissions: the user needs access to `/dev/i2c-*` (the `i2c` group, or
 proprietary driver has needed `NVreg_...` options for DDC on some versions [I, from ddcutil's docs; not checked
 here]. Open question 4. Queue item: part of Q-14 or a new row when started.
 
-### How the probe would adopt it (later, agreed with feature/nearblack-tint's owner)
+### How the probe would adopt it (D4: may happen on this branch; not switched yet)
 
-After `feature/nearblack-tint` merges, a separate change (its own queue row) replaces the probe's `open_monitor`,
-`vcp_get`, `vcp_set`, `restore_vcps` and `DDC_VCPS` with:
+BevelTipDrip (2026-11-19, Decisions) allowed the switch on this branch. Built so far: `ddc/steps.py`,
+`parse_ddc_steps(text, codes)`, the probe's function with the allowed codes as a parameter (`PROBE_VCPS`, the
+probe's six); `tests/test_steps.py` checks it against 23 inputs whose results and exceptions were recorded from
+the probe's own function (blob `221f64c`). **`tools/nearblack_probe.py` is not edited.** Why the drafting agent
+(2026-11-19) stopped there:
+
+1. **Read back on a mismatch: stop or carry on?** Today the probe writes, then tags the CSV with what the monitor
+   reads back (`ddc_16=100_...`) and measures anyway. `SafeDdc.set` raises `ReadbackMismatch` instead (safety
+   rule 3). In True Black 400 the gains are most likely locked [I], so a gain step would stop a run that runs
+   today. Keeping the probe identical means catching `ReadbackMismatch` and carrying on, which works around rule 3;
+   applying rule 3 changes the probe's behaviour. That is BevelTipDrip's choice (open question 13).
+2. **Concurrent edits.** `feature/nearblack-tint` changed the probe three times on 2026-11-19 (`b9ccffb`,
+   `e57d1b9`, `18b0034`, in `run()` among other places), and work on it continues in another checkout. The DDC
+   code sits inside `run()` (lines 785-825); an edit here could conflict at the merge ("we just have to merge
+   cleanly", BevelTipDrip, 2026-11-19).
+
+Other differences a switch brings, none in the CSV or the flags [I, from the code]: one more read before each
+write (`check_write`) and one after it (the read back), so each step takes about two DDC/CI reads longer; a
+description matching two monitors raises (the probe takes the first); every physical-monitor handle is released
+(the probe destroys only its own); error texts change (`DdcError` instead of `RuntimeError`, same `ERROR:` path in
+`run()`). A failed read before a write stops the step, as the probe's tag read after the write already does.
+
+The switch, once open question 13 is answered (only the probe's DDC code changes):
 
 ```
-from ddc import open_backend, SafeDdc
-with open_backend() as be:
-    ddc = SafeDdc(be, be.find(args.monitor))
-    with ddc.preserve(vcps):          # restore on any exit, as the probe's finally: does today
-        for step in steps:
-            for c, v in step.items():
-                ddc.set(c, v)          # range check and read back on every write
-            sweep(...)
+from ddc import open_backend, SafeDdc, ReadbackMismatch
+from ddc.steps import PROBE_VCPS as DDC_VCPS, parse_ddc_steps
+...
+be = open_backend()                                  # in run(), where open_monitor() was; be.close() in finally:
+ddc = SafeDdc(be, be.find(args.monitor), whitelist=DDC_VCPS)
+# up-front range check and saved_vcp: as today, with ddc.get(c)
+for c, v in step.items():
+    ddc.set(c, v)                                    # (13: or catch ReadbackMismatch and carry on, as today)
+# restore_vcps(): ddc.restore(saved_vcp), printing "Restored ..." / "! failed ... reset it in the OSD" as today
 ```
 
-The probe's restore before the end reference (so the drift check compares like with like) becomes the end of the
-`with` block. `parse_ddc_steps` can move to the package unchanged. The probe's CSV tag (`ddc_6C=50_...`) keeps
-coming from read backs. Not done on this branch: the probe belongs to `feature/nearblack-tint`.
+Test: `test_steps.py` (parse), a fake-backend check of the `run()` DDC block if it is moved into a function, and
+one probe `--ddc-steps` run on the monitor with a go (Q-6).
 
 ## Stages
 
@@ -257,7 +278,7 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 | D2b | Read-only discovery: `scan` of 00-FF, MCCS names | none | unit tests; T-DDC2 | built (unit tests, 2026-11-19); T-DDC2 not run |
 | D2c | AW3225QF display module (skeleton): codes, value meanings, preset locks, safety classes, sources | none | unit tests; T-DDC2 fills it in | built (unit tests, 2026-11-19); entries not confirmed on this monitor except 16 18 1A 6C 6E 70 |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC3 | not started (needs a go) |
-| D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | a probe `--ddc-steps` run | not started |
+| D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | `test_steps.py`; a probe `--ddc-steps` run | `parse_ddc_steps` built in the package (unit tests, 2026-11-19); the probe not switched (open question 13) |
 | D5 | Linux backend | | unit tests on a fake I2C device; a Linux machine | not started |
 
 ## Risks
@@ -325,6 +346,9 @@ Everything still under Open questions was assumed by a drafting agent (2026-11-1
     CA, 76 and 78 right on the never list (beyond the 04 / 05 / 06 / 08 / 0A / 60 / D6 the lead agent's brief
     named)? Should `--allow` also need a second confirmation for manufacturer codes (E0-FF), or a display
     module's "ask first" class to be named on the command line?
+13. **The probe's switch (D4): on a read back mismatch, stop the run or carry on as today?** And may the switch
+    edit `run()` now, or wait until the `feature/nearblack-tint` probe work settles? ([How the probe would adopt
+    it](#how-the-probe-would-adopt-it-d4-may-happen-on-this-branch-not-switched-yet).)
 
 ## Read-only check 2026-11-19: monitor not reachable
 
