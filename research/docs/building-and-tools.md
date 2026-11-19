@@ -7,7 +7,7 @@ a step changes or a new trap is found, update this page the same day.
 
 | What | Where |
 |---|---|
-| Repo | Local for now; GitHub (`github.com/BevelTipDrip/...`) not created yet ([repo-boundaries.md](repo-boundaries.md)) |
+| Repo | `git clone https://github.com/BevelTipDrip/Plascord-Universal-Display-Calibrator.git` |
 | Meter software (not in git) | `tools/argyll/`: `spotread.exe`, `dispwin.exe` and the meter correction (`.ccmx`), per person (below) |
 | Measurement CSVs | `research/docs/data/` (in git; the probe writes there) |
 | Built profiles | `profiles/` (examples in git; others local) |

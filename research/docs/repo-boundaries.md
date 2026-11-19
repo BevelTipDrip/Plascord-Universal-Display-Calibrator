@@ -6,7 +6,7 @@ Parent: [START-HERE.md](START-HERE.md). The bar for a pull request: [pr-checklis
 
 | Remote | URL | Rule |
 |---|---|---|
-| `origin` | GitHub, under [BevelTipDrip](https://github.com/BevelTipDrip) (not created yet: BevelTipDrip creates it, or gives an agent the go) | The team's repo. `main` is protected: changes reach it only through pull requests. |
+| `origin` | https://github.com/BevelTipDrip/Plascord-Universal-Display-Calibrator (public) | The team's repo. `main` is protected: changes reach it only through pull requests. |
 
 Not a fork: there is no `upstream`.
 

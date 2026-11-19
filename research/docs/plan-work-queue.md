@@ -38,12 +38,12 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
+| Q-1 | feature | Near-black colour shift: per-channel (R/G/B) correction of the blue/purple tint near black | BevelTipDrip | feature/nearblack-tint | in progress | Approach proposed, waiting for an answer before code. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
 
 ## Next
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
-| Q-1 | feature | Near-black colour shift: per-channel (R/G/B) correction of the blue/purple tint near black | | | open | xy ~0.27/0.24 at 0.03-0.06 nit vs D65 0.313/0.329 (T-NB3, T-NB9); needs a plan doc. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-2 | feature | Peak 1000: dense sweep, then a v2 (snapped) profile | | | open | v1 is unsnapped and built from the 26-level run, 2 points in the 0.01-0.08 nit jump (T-NB2). [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-3 | feature | Re-apply the HDR profile after waking from standby | | | open | ledoge's fix: a scheduled task on System log, Power-Troubleshooter, Event ID 1. [profiles-reference.md](profiles-reference.md) |
 | Q-4 | research | Check the profile reaches fullscreen games (independent flip) | | | open | The patch generator flips independently and gets the LUT (T-NB7), so it should; confirm in real games. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
