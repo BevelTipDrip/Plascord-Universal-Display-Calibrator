@@ -160,3 +160,32 @@ D65 at the same luminance, both profiles have the same min / peak luminance and 
 all levels alike, while the change grows toward black; the 11:17 MediEvil run (T-MED1, one profile all day) also
 read ~15% above T-NB3 near black. To settle it: after T-NT1, the same six codes with
 `HDR Calibrated Profile 11-18-2026 11563.icc` active (Q-19).
+
+## T-NT1: per-channel D65 search, True Black 400, stopped at code 99 (2026-11-18 23:50 - 2026-11-19 01:10, run by Claude for BevelTipDrip, build `a63d1d1`, log `data/nearblack-t-nt1-tb400-search-2026-11-19.csv`)
+
+Neutral measuring profile active (T-NT0 follow-up); `--search` with the T-NB3 response as start. Stopped by
+BevelTipDrip at input code 99 (10 of 24 codes, ~120 readings in ~80 min): "the process right now seems
+inneficient". Closing the generator made the probe abort normally and save every reading.
+
+| Input | Readings | Start grey: Y ratio, Delta u'v' | Best: codes R/G/B, Y ratio, xy, Delta u'v' |
+|---|---|---|---|
+| 31 | 11 | 0.86x, 0.099 | 31/35/29, 0.74x, 0.280/0.283, 0.032 |
+| 35 | 11 | 0.77x, 0.104 | 32/34/32, 0.83x, 0.252/0.219, 0.084 |
+| 40 | 10 | 0.92x, 0.097 | 34/37/30, 1.24x, 0.285/0.324, 0.019 |
+| 47 | 12 | 0.65x, 0.097 | 36/37/31, 1.12x, 0.330/0.329, 0.013 |
+| 52 | 12 | 1.13x, 0.065 | 37/39/37, 1.31x, 0.272/0.265, 0.045 |
+| 56 | 16 | 1.21x, 0.057 | 42/42/34, 1.51x, 0.321/0.335, 0.006 |
+| 64 | 11 | 0.93x, 0.054 | 42/43/35, 1.10x, 0.321/0.335, 0.006 |
+| 75 | 11 | 1.12x, 0.026 | 41/46/36, 0.91x, 0.281/0.308, 0.022 |
+| 85 | 12 | 1.13x, 0.021 | 54/56/44, 0.99x, 0.307/0.322, 0.0046 |
+
+- **Near black the search does not converge** [V]: no code reached the tolerance (Delta u'v' 0.002, Y 3%). Each
+  channel is a staircase there: +2 codes of green or blue changed almost nothing, +4 of blue jumped (code 56), so
+  the measured slopes are tiny, the Newton step is large, and it overshoots (purple -> yellow -> red at 0.49x).
+- **It improves with level**: at code 85 (0.2 nit) 0.99x and Delta u'v' 0.0046, from a start of 0.021.
+- **Starting greys 12-13% too bright** from 0.15 nit up: the start came from T-NB3 and the curve has moved (Q-19).
+- **Speed**: ~45 s per patch below 1 nit (5 readings, each a fresh `spotread`), not the ~10 s estimated.
+
+Verdict: replace the Newton search near black (proposed 2026-11-19: Q-19 check, then Q-9 speed, a per-channel step
+map with additive prediction choosing all near-black levels together, the search kept from ~0.2 nit up with a fresh
+start); waiting for BevelTipDrip's OK.
