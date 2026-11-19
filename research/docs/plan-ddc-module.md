@@ -1,6 +1,6 @@
 # Plan: a DDC/CI package that reads and writes a monitor's VCP codes safely, Windows first, Linux later
 
-Status: planned 2026-11-19, nothing built; groundwork for BevelTipDrip to review (every assumed decision is under
+Status: planned 2026-11-19; D1 built `e40689f`, not run on a monitor; groundwork for BevelTipDrip to review (every assumed decision is under
 [Open questions for BevelTipDrip](#open-questions-for-beveltipdrip)). Parent: [START-HERE.md](START-HERE.md).
 Owner: BevelTipDrip (drafted by a Claude agent while BevelTipDrip was away). Work queue: Q-20 (related: Q-6, Q-12).
 Branch: `feature/ddc-module`. Card: [ddc-module](../changes/ddc/ddc-module.md). Read
@@ -148,7 +148,7 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
-| D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built (62 tests pass, 2026-11-19) |
+| D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built `e40689f` (62 tests pass, 2026-11-19) |
 | D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, below) |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC2 | not started (needs a go) |
 | D4 | The probe uses the package (after nearblack-tint merges) | | a probe `--ddc-steps` run | not started |
