@@ -5,8 +5,8 @@ Before using a new ID: `changemap.py test <id>` must find nothing.
 
 | ID | Where | Text | Cards |
 |---|---|---|---|
-| T-DDC1 | [plan-ddc-module.md:353](../docs/plan-ddc-module.md#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run) | Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run) |  |
-| T-DDC2 | [plan-ddc-module.md:353](../docs/plan-ddc-module.md#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run) | Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run) |  |
+| T-DDC1 | [plan-ddc-module.md:354](../docs/plan-ddc-module.md#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run) | Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run) |  |
+| T-DDC2 | [plan-ddc-module.md:354](../docs/plan-ddc-module.md#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run) | Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run) |  |
 | T-DRIFT1 | [plan-nearblack-tint.md:209](../docs/plan-nearblack-tint.md#t-drift1-the-t-nt0-codes-with-the-hdr-calibration-profile-2026-11-19-0120-run-by-claude-for-beveltipdrip-log-datanearblack-t-drift1-hdrcal-profile-2026-11-19csv) | T-DRIFT1: the T-NT0 codes with the HDR Calibration profile (2026-11-19 ~01:20, r |  |
 | T-DRIFT2 | [plan-nearblack-tint.md:227](../docs/plan-nearblack-tint.md#t-drift2-the-same-codes-with-the-neutral-profile-again-10-min-after-t-drift1-2026-11-19-0130-run-by-claude-for-beveltipdrip-log-datanearblack-t-drift2-neutral-profile-2026-11-19csv) | T-DRIFT2: the same codes with the neutral profile again, ~10 min after T-DRIFT1  |  |
 | T-INT1 | [measurement-reference.md:65](../docs/measurement-reference.md#7-meter-timing-2026-11-19) | T-INT1: adaptive vs fixed integration (2026-11-19 02:20, run by Claude for Bevel |  |

@@ -1,12 +1,12 @@
 ---
 id: ddc-module
-title: DDC/CI package tools/ddc: backends (dxva2, fake) behind one interface, and SafeDdc, the only writer (whitelist, 0..max check, read back, save and restore), with a CLI and unit tests
+title: DDC/CI package tools/ddc: backends (dxva2, fake), SafeDdc the only writer (never list, whitelist, 0..max, read back, restore), read-only scan, MCCS names, display modules (AW3225QF skeleton), CLI and unit tests
 area: ddc
 status: active
 default: n/a
-origin: ours (Windows backend ported from tools/nearblack_probe.py, feature/nearblack-tint @ 1703b92)
+origin: ours (Windows backend and --ddc-steps parser ported from tools/nearblack_probe.py, feature/nearblack-tint @ 1703b92)
 owner: BevelTipDrip
-commits: e40689f
+commits: e40689f, 1a5b876, 328832c, 43fc609, b90f29d
 prs:
 queue: Q-20
 files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/mccs.py, tools/ddc/scan.py, tools/ddc/tests/test_scan.py, tools/ddc/displays/__init__.py, tools/ddc/displays/aw3225qf.py, tools/ddc/tests/test_displays.py, tools/ddc/steps.py, tools/ddc/tests/test_steps.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
@@ -22,66 +22,54 @@ checked:
 ---
 ## What it does
 
-`tools/ddc/` lists monitors, reads any VCP code and writes a few, standard library only. A `Backend`
-(`monitors`, `get_vcp`, `set_vcp`, `capabilities`, `close`) has two implementations: `Dxva2Backend` (Windows
-dxva2 through ctypes, with argtypes, owned handles and Windows error text) and `FakeBackend` (in memory, with
-failure injection and a write log). `SafeDdc` is the only caller of `set_vcp`: never list (`NEVER_WRITE` plus a
-display module's), whitelist (default 10 / 12, 16 / 18 / 1A, 6C / 6E / 70), 0..max read from the monitor, read
-back; `preserve(codes)` saves then restores on any exit; `restore(saved)` puts back values a caller saved.
-`python -m ddc list | caps | get | scan | set` (from `tools/`); `set` is a dry run unless `--yes`, `--allow` widens
-the whitelist for one call, and a failed or mismatched write is put back. `scan` reads every code 00-FF, at least
-50 ms apart, against the capabilities string; codes that reply but are not listed are hidden-setting candidates.
-Names: MCCS 2.2a (`mccs.py`). Per-model knowledge: `displays/` (AW3225QF skeleton: names, values, safety
-classes; its never codes join the core's). `steps.py`: the probe's `--ddc-steps` parser, for the probe's
-switch (not done: plan open question 13).
+`tools/ddc/` lists monitors, reads any VCP code and writes some, standard library only. `Backend` (`monitors`,
+`get_vcp`, `set_vcp`, `capabilities`, `wait`, `close`): `Dxva2Backend` (Windows dxva2 through ctypes) and
+`FakeBackend` (in memory; failure injection; logs of writes, reads, waits). `SafeDdc` is the only caller of
+`set_vcp`: never list (`NEVER_WRITE` plus a display module's), whitelist (default 10 12 16 18 1A 6C 6E 70), 0..max
+read just before, read back; `preserve()` / `restore()` put values back. `scan` reads every code 00-FF (Get only,
+>= 50 ms apart) against the capabilities string; replies not listed are hidden-setting candidates. `mccs.py`: MCCS
+2.2a names. `displays/`: per-model knowledge (AW3225QF skeleton: names, values, preset locks, safety classes).
+`steps.py`: the probe's `--ddc-steps` parser. CLI `python -m ddc list | caps | get | scan | display | set` (from
+`tools/`); `set` is a dry run unless `--yes`; `--allow` widens the whitelist for one call.
 
 ## Invariants
 
-- Only `safety.py` calls `.set_vcp(` (test `OnlySafetyWrites` greps the package).
-- `SafeDdc.set`: code not in `never` (checked first, on every call), in `whitelist`, `int` (not `bool`) in
-  0..`maximum` from a read just before; a failed read refuses; after the write, a read back other than the value
-  raises `ReadbackMismatch`.
-- `NEVER_WRITE` holds at least 04 05 06 08 0A 60 D6; `SafeDdc(...)` raises `WriteRefused` when its whitelist names
-  a never code; `preserve()` and `restore()` refuse never codes before reading or writing anything.
-- `NEVER_WRITE` and `DEFAULT_WRITE_WHITELIST` do not overlap (test `NeverList`).
-- `Preserve.__enter__` refuses unlisted codes and reads all codes before anything is written; `__exit__` restores
-  every saved code (no range check: the values came from the monitor), keeps going after a failure, and raises
+- Only `safety.py` calls `.set_vcp(` (test `OnlySafetyWrites` greps the package, `displays/` included).
+- `SafeDdc.set`: code not in `never` (checked first, every call), in `whitelist`, `int` (not `bool`) in 0..max
+  from a read just before; a failed read refuses; a read back other than the value raises `ReadbackMismatch`.
+- `NEVER_WRITE` holds at least 04 05 06 08 0A 60 D6 and does not overlap `DEFAULT_WRITE_WHITELIST`; `SafeDdc(...)`
+  raises `WriteRefused` when its whitelist names a never code; `preserve()` / `restore()` refuse never and
+  unlisted codes before reading or writing anything.
+- `Preserve.__exit__` restores every saved code (no range check), keeps going after a failure, and raises
   `RestoreFailed` chained to the exception that ended the block.
-- `cli._set` writes only with `--yes`; exit 2 = refused, nothing written. `--allow` codes go through the same
-  `SafeDdc` (never list, range, read back); after a failed or mismatched write it calls `restore` with the value
-  read just before.
-- `scan` calls only `capabilities` and `get_vcp`, calls `wait(>= MIN_INTERVAL)` before every read, and opens its
-  CSV / JSON with mode `"x"` (never overwrites).
-- A display module only adds never codes (its `safe` set equals `DEFAULT_WRITE_WHITELIST`); `cli._set` applies
-  the never codes of the description-matched module whatever `--display` says.
-- `windows.py` touches no Windows API at import; `Dxva2Backend()` raises `DdcError` off Windows.
-- `error_text` passes dxva2's 0xC026xxxx codes to `FormatError` signed (unsigned raises OverflowError).
+- `cli._set` writes only with `--yes` (exit 2 = refused, nothing written); after a failed or mismatched write it
+  calls `restore` with the value read just before; it applies the never codes of the description-matched display
+  module whatever `--display` says.
+- `scan` calls only `capabilities` and `get_vcp`, `wait(>= MIN_INTERVAL)` before every read, and opens its CSV /
+  JSON with mode `"x"` (never overwrites).
+- A display module only adds never codes: its `safe` set equals `DEFAULT_WRITE_WHITELIST`; every entry without
+  `confirmed` says "not confirmed on this monitor" in its source.
+- `steps.parse_ddc_steps` returns and raises exactly what the probe's does (`test_steps.py` golden table).
+- `windows.py` touches no Windows API at import; `error_text` passes 0xC026xxxx codes to `FormatError` signed.
 
 ## Interactions
 
-- [nearblack-probe](../measurement/nearblack-probe.md) has its own copy of this DDC/CI code on
-  `feature/nearblack-tint`; it is meant to switch to this package after that branch merges (plan, D4). Until then
-  the two copies can drift. Since 2026-11-19 the default whitelist is wider (10, 12) than the probe's `DDC_VCPS`;
-  the probe keeps its own six-code list (`steps.PROBE_VCPS`, same codes) and passes it as the whitelist when it
-  switches. `steps.parse_ddc_steps` must keep matching the probe's (`test_steps.py` golden table).
+- [nearblack-probe](../measurement/nearblack-probe.md) still has its own DDC/CI code (`DDC_VCPS`, the same six
+  codes as `steps.PROBE_VCPS`); switching it is plan D4, open question 13 (read back mismatch: stop or carry on).
 
 ## Evidence
 
-- Unit tests built: 62 run, 0 failures, 1 skipped (the off-Windows check, skipped on Windows), Python 3.8.10 and
-  3.14, Windows, 2026-11-19 (`python -m unittest discover -s tools/ddc/tests -t tools`).
-- 2026-11-19 (second session): 10 / 12 writable, `--allow`, the never list, put-back after a failed `set`:
-  built, 82 run, 0 failures, 1 skipped (Python 3.8.10, Windows). Fake backend only.
-- 2026-11-19: `scan`, MCCS names: built, 105 run, 0 failures, 1 skipped (Python 3.8.10 and 3.14, Windows), fake
-  backend only.
-- 2026-11-19: display modules: built, 124 run, 0 failures, 1 skipped (3.8.10, 3.14), fake backend only.
-- 2026-11-19: `steps.parse_ddc_steps`: built, same results and exceptions as the probe's on 23 recorded inputs;
-  129 run, 0 failures, 1 skipped (3.8.10, 3.14).
-- Not run against a monitor: on 2026-11-19 the AW3225QF was not reachable (`list` found only `WinDisc`,
-  error 0xC02625E5). No write has been sent to any real display.
+- Unit tests built (fake backends only): 62 run (`e40689f`); 129 run, 0 failures, 1 skipped (off-Windows check),
+  Python 3.8.10 and 3.14, Windows, 2026-11-19 (`cd tools && python -m unittest discover -s ddc/tests -t .`).
+- Not run against a monitor: the AW3225QF was not reachable on 2026-11-19 (three tries; `list` found only
+  `WinDisc`, error 0xC02625E5). No write has been sent to any real display. T-DDC1 / T-DDC2 planned, not run.
+- AW3225QF module entries: 16 18 1A 6C 6E 70 confirmed by the 2026-11-18 reads; the rest from public sources
+  (plan, "AW3225QF display module"), not confirmed on this monitor.
 
 ## History and pitfalls
 
-- 2026-11-19: the first `list` with the display off said only "No monitors found". Decoding the error by hand
-  showed `ctypes.FormatError` raises OverflowError on 0xC02625E5, which `_err` would have hit. Built: `error_text`
-  (signed code) and `skipped` (each display without a physical monitor, and why), run on that same display-off
-  case.
+- 2026-11-19: `ctypes.FormatError` raises OverflowError on 0xC02625E5; built `error_text` (signed code) and
+  `skipped` (each display without a physical monitor, and why).
+- 2026-11-19: `--display none` would have lifted a module's never codes for `set`; `_never` now always adds the
+  description-matched module's.
+- Options go after the command (`python -m ddc scan --backend fake`), not before it.

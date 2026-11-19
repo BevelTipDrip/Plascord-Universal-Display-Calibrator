@@ -39,7 +39,7 @@ _monitor control over DDC/CI: tools/ddc/ (backends, safety layer for VCP writes,
 
 | ID | Status | Default | Switches | Title |
 |---|---|---|---|---|
-| [ddc-module](ddc/ddc-module.md) | active | n/a |  | DDC/CI package tools/ddc: backends (dxva2, fake) behind one interface, and SafeDdc, the only writer (whitelist, 0..max check, read back, save and restore), with a CLI and unit tests |
+| [ddc-module](ddc/ddc-module.md) | active | n/a |  | DDC/CI package tools/ddc: backends (dxva2, fake), SafeDdc the only writer (never list, whitelist, 0..max, read back, restore), read-only scan, MCCS names, display modules (AW3225QF skeleton), CLI and unit tests |
 
 ## tooling
 

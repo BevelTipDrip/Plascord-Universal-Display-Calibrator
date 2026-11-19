@@ -1,6 +1,7 @@
 # Plan: a DDC/CI package that reads and writes a monitor's VCP codes safely, Windows first, Linux later
 
-Status: planned 2026-11-19; D1 built `e40689f`, not run on a monitor; groundwork for BevelTipDrip to review (every assumed decision is under
+Status: planned 2026-11-19; D1 built `e40689f`; D1b, D2b, D2c built (`1a5b876`, `328832c`, `43fc609`) and D4's
+parser (`b90f29d`), 2026-11-19; not run on a monitor; for BevelTipDrip to review (every assumed decision is under
 [Open questions for BevelTipDrip](#open-questions-for-beveltipdrip)). Parent: [START-HERE.md](START-HERE.md).
 Owner: BevelTipDrip (drafted by a Claude agent while BevelTipDrip was away). Work queue: Q-20 (related: Q-6, Q-12).
 Branch: `feature/ddc-module`. Card: [ddc-module](../changes/ddc/ddc-module.md). Read
@@ -415,5 +416,8 @@ Run by the drafting agent (Claude), branch `feature/ddc-module` before its first
 - Found on the way: `ctypes.FormatError(0xC02625E5)` raises OverflowError; the backend now passes the signed code
   (`windows.error_text`) and `list` prints each skipped display with the reason
   ([ddc-reference.md](ddc-reference.md#5-things-not-to-retry)).
+
+Second session, same day (Claude, for BevelTipDrip): `python -m ddc list` at the start of the session and again at
+12:42 gave the same result (only `WinDisc`, 0xC02625E5); no other command ran against the real backend.
 
 T-DDC1 (D2) and T-DDC2 (D2b) are still to run: [the plan for them](#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run).

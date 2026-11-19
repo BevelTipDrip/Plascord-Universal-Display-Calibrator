@@ -40,7 +40,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 |---|---|---|---|---|---|---|
 | Q-9 | chore | Probe speed: stop at 2 readings when they agree; CSV written per patch | BevelTipDrip | feature/nearblack-tint | built | `--agree` (fake meter: 100 -> 49 readings for 26 levels); one spotread session dropped (keyboard-only input, ~1.3 s saved of 7-15 s). Not run on the meter yet. [nearblack-probe](../changes/measurement/nearblack-probe.md) |
 | Q-1 | feature | Grey scale to D65 at every level: whole-scale magenta lean plus the blue/purple shift near black | BevelTipDrip | feature/nearblack-tint | built (search, not run) | Per-channel LUTs solved by a measured search; run needs the preset choice and a go. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
-| Q-20 | feature | DDC/CI module: read/write a monitor's VCP codes safely, Windows first, Linux later | BevelTipDrip | feature/ddc-module | built e40689f; in progress | Package, safety layer, CLI, tests on a fake backend; 10/12 writable, `--allow`, never list (2026-11-19). Not run on a monitor (unreachable 2026-11-19); nothing written. Related: Q-6, Q-12 [plan-ddc-module.md](plan-ddc-module.md) |
+| Q-20 | feature | DDC/CI module: read/write a monitor's VCP codes safely, Windows first, Linux later | BevelTipDrip | feature/ddc-module | built b90f29d; in progress | Safe writer, read-only scan, AW3225QF module skeleton; tests on fake backends. Not run on a monitor; nothing written. Next: T-DDC1/T-DDC2 (read only). Related: Q-6, Q-12 [plan-ddc-module.md](plan-ddc-module.md) |
 
 ## Next
 

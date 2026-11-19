@@ -54,6 +54,7 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 | `ReadbackMismatch` after a write | The control is locked in this OSD preset, or the monitor quantizes values | The preset (AW3225QF: colour controls only in Custom Color HDR [I]); plan open question 6 |
 | `RestoreFailed` | A write failed during restore | The values printed; set them in the OSD |
 | `scan`: a code replies 0 of 0 | Some monitors answer unsupported codes that way | Treat it as unsupported until a write test says otherwise |
+| `python -m ddc --backend fake scan`: "invalid choice: 'fake'" | Options go after the command | `python -m ddc scan --backend fake` |
 | `scan`: every code fails | Display off (first row), or another program is talking DDC/CI | `list` first; close other DDC/CI tools (Dell Display Manager, Twinkle Tray) |
 
 ## 5. Things not to retry
