@@ -59,6 +59,13 @@ python build_mhc2.py --csv ../research/docs/data/nearblack-t-nb3-tb400-dense-202
 python set_hdr_profile.py --install "../profiles/AW3225QF TB400 near-black fix v2.icc"
 python set_hdr_profile.py --show
 
+# DDC/CI (tools/ddc/, research/docs/ddc-reference.md). Reads need no go; `set --yes` writes and needs one.
+python -m ddc list                     # monitors DDC/CI can reach (--backend fake: an in-memory demo monitor)
+python -m ddc caps                     # the capabilities string, parsed (--raw as sent)
+python -m ddc get 10 12 16 18 1A 6C 6E 70
+python -m ddc set 6C 48                # dry run: checks and prints, writes nothing
+python -m ddc set 6C 48 --yes          # writes a whitelisted code, reads back; only with a person's go
+
 # Unattended runs: wake the display before, turn it off after.
 python display_power.py wake
 python display_power.py off
@@ -69,8 +76,19 @@ machine, pass your own (Windows HDR Calibration app output, in the colour folder
 
 ## Test
 
-No automated tests yet. Results come from meter runs, each with a test ID written up in its plan doc
-(`T-NB<n>` in [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md)); every module brings its own tests (Q-12).
+Measurement results come from meter runs, each with a test ID written up in its plan doc (`T-NB<n>` in
+[plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md)); every module brings its own tests (Q-12).
+
+Unit tests (no hardware; standard library `unittest`; the `unit-tests` workflow runs them on every push and pull
+request, Python 3.12 on Linux). From the repo root:
+
+```
+python -m unittest discover -s tools/ddc/tests -t tools          # DDC/CI package: fake backend only
+```
+
+The Windows-only check that `Dxva2Backend` refuses to start off Windows is skipped on Windows (it would enumerate
+the real monitors). The tools support Python 3.8: run the tests with `py -3.8` too after a change.
+
 The docs are checked with:
 
 ```
@@ -90,6 +108,7 @@ python research/tools/changemap.py check
 | Tool | Where | Use |
 |---|---|---|
 | `changemap.py` | `research/tools/` | Change map lookups and checks ([README](../changes/README.md)) |
+| `python -m ddc` | `tools/ddc/` (run from `tools/`) | Read monitor VCP codes over DDC/CI; dry-run writes ([ddc-reference.md](ddc-reference.md)) |
 
 ## Traps
 

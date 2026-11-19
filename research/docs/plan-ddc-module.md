@@ -3,8 +3,8 @@
 Status: planned 2026-11-19, nothing built; groundwork for BevelTipDrip to review (every assumed decision is under
 [Open questions for BevelTipDrip](#open-questions-for-beveltipdrip)). Parent: [START-HERE.md](START-HERE.md).
 Owner: BevelTipDrip (drafted by a Claude agent while BevelTipDrip was away). Work queue: Q-20 (related: Q-6, Q-12).
-Branch: `feature/ddc-module`. Read [measurement-reference.md](measurement-reference.md) first (invariant 4: every
-DDC/CI value a run changes is restored).
+Branch: `feature/ddc-module`. Card: [ddc-module](../changes/ddc/ddc-module.md). Read
+[ddc-reference.md](ddc-reference.md) first.
 
 ## Why
 
@@ -148,8 +148,8 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
-| D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | not started |
-| D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started |
+| D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built (62 tests pass, 2026-11-19) |
+| D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, below) |
 | D3 | One write on the AW3225QF, restored, with a go | | T-DDC2 | not started (needs a go) |
 | D4 | The probe uses the package (after nearblack-tint merges) | | a probe `--ddc-steps` run | not started |
 | D5 | Linux backend | | unit tests on a fake I2C device; a Linux machine | not started |
@@ -192,3 +192,20 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 10. **Retries and timing.** Kept the probe's: writes 3 tries 0.3 s apart, 0.15 s settle; reads added 2 tries.
     Tune when the AW3225QF's behaviour is measured?
 11. **Who switches the probe to the package, and when** (D4): after nearblack-tint merges, as its own queue row?
+
+## Read-only check 2026-11-19: monitor not reachable
+
+Run by the drafting agent (Claude), branch `feature/ddc-module` before its first code commit, from `tools/`:
+`python -m ddc list`, then `python -m ddc get 10 12 14 16 18 1A 6C 6E 70 DC`. No test ID: nothing depends on it.
+
+- `list`: "No monitors found for DDC/CI"; skipped `WinDisc`: "Windows error 0xC02625E5: The function failed
+  because the specified GDI device did not have any monitors associated with it." `get`: the same error, exit 1.
+- Windows' only display was `WinDisc`, its stand-in when no display is connected; `Get-PnpDevice -Class Monitor`
+  listed both AW3225QF entries with status Unknown (not present). The display was off, asleep or disconnected
+  [I]; it was not woken (no go to wake it, and none needed for groundwork).
+- Found on the way: `ctypes.FormatError(0xC02625E5)` raises OverflowError; the backend now passes the signed code
+  (`windows.error_text`) and `list` prints each skipped display with the reason
+  ([ddc-reference.md](ddc-reference.md#5-things-not-to-retry)).
+
+T-DDC1 (D2) is still to run: with the display on, `list`, `caps`, `get` of the same codes; compare 16 / 18 / 1A
+and 6C / 6E / 70 with the 2026-11-18 reads (100 of 100, 50 of 255).

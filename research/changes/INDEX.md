@@ -4,7 +4,7 @@ One line per card. Open a card for invariants, interactions and evidence; look u
 reading: `changemap.py file <path>` / `switch <name>` / `commit <hash>` / `test <id>` / `find <text>`.
 Card format and statuses: [README.md](README.md).
 
-7 cards.
+8 cards.
 
 ## measurement
 
@@ -32,6 +32,14 @@ _corrections built from measurements and how they are installed: tools/build_mhc
 | [lut-snap](profiles/lut-snap.md) | active | on |  | Snap corrected LUT outputs to the panel step closest to the target, stored as code + 0.25, because the display pipeline truncates LUT output to whole 10-bit codes |
 | [mhc2-lut](profiles/mhc2-lut.md) | active | n/a |  | MHC2 profile builder: inverts the measured near-black response into a per-code 1D LUT, ramps below the meter floor, blends to identity at 20-30 nits, writes it into a copy of the Windows HDR Calibration profile |
 | [set-hdr-profile](profiles/set-hdr-profile.md) | active | n/a |  | Install an ICC/MHC2 profile and make it the display's HDR profile through mscms, show the current profiles, and toggle Windows HDR through DisplayConfig |
+
+## ddc
+
+_monitor control over DDC/CI: tools/ddc/ (backends, safety layer for VCP writes, capabilities parser, CLI)_
+
+| ID | Status | Default | Switches | Title |
+|---|---|---|---|---|
+| [ddc-module](ddc/ddc-module.md) | active | n/a |  | DDC/CI package tools/ddc: backends (dxva2, fake) behind one interface, and SafeDdc, the only writer (whitelist, 0..max check, read back, save and restore), with a CLI and unit tests |
 
 ## tooling
 

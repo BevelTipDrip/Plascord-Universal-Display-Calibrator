@@ -5,12 +5,12 @@ status: active
 started: 2026-11-19
 base: main @ 1b1783f
 goal: A standalone DDC/CI package (tools/ddc/) that reads and writes a monitor's VCP codes safely (whitelist, range check, read back, save and restore), Windows dxva2 first, with a fake backend and tests; Linux later
-areas: tooling
-files: tools/ddc/*, research/docs/plan-ddc-module.md, research/changes/ddc/*, research/tools/changemap.config.json, research/docs/building-and-tools.md, research/docs/plan-work-queue.md, research/docs/START-HERE.md, .github/workflows/*, research/docs/handoff-2026-11-19-ddc-module.md
+areas: ddc, tooling
+files: tools/ddc/*, research/docs/plan-ddc-module.md, research/docs/ddc-reference.md, research/changes/ddc/*, research/tools/changemap.config.json, research/docs/building-and-tools.md, research/docs/plan-work-queue.md, research/docs/START-HERE.md, .github/workflows/*, research/docs/handoff-2026-11-19-ddc-module.md
 interfaces: new Python API and CLI in tools/ddc/ (nothing existing changes); a new change-map area "ddc" in changemap.config.json; a new CI workflow for unit tests
 work_queue: Q-20
 docs: plan-ddc-module.md
-cards:
+cards: ddc-module
 ---
 ## Goal and scope
 
@@ -31,7 +31,7 @@ later, agreed with its owner); any write to a real display.
 |---|---|---|
 | DDC/CI package: backends, safety layer, capabilities parser, CLI | `tools/ddc/` | no: new code; nothing imports it yet |
 | Unit tests on the fake backend | `tools/ddc/tests/` | no |
-| Plan doc | `research/docs/plan-ddc-module.md` | no |
+| Plan doc, area reference doc | `research/docs/plan-ddc-module.md`, `research/docs/ddc-reference.md` | no |
 | Change-map area `ddc` and its first card | `research/tools/changemap.config.json`, `research/changes/ddc/` | yes: a new area name others can file cards under |
 | How to run and test it | `research/docs/building-and-tools.md` | no |
 | CI job running the unit tests | `.github/workflows/` | yes: a new check on every push and pull request |

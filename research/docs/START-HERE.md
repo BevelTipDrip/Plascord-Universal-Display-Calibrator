@@ -119,6 +119,7 @@ The state of each area today, one row each, with links. Details live in the link
 | [plan-ddc-module.md](plan-ddc-module.md) | DDC/CI package (`tools/ddc/`): design, safety rules, tests, Linux route, open questions (Q-20) |
 | [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) | AW3225QF HDR near-black correction (MHC2 LUT): findings, design, test write-ups T-NB1 to T-NB9 |
 | [measurement-reference.md](measurement-reference.md) | Measurement area: meter, probe, the setup that must hold before a run, things not to retry |
+| [ddc-reference.md](ddc-reference.md) | DDC/CI area: the package's files, write-safety invariants, before any write, symptoms |
 | [patchgen-reference.md](patchgen-reference.md) | Patch generator area: HDR10 swapchain, what makes a patch a true signal value |
 | [profiles-reference.md](profiles-reference.md) | Profiles area: MHC2 format, how Windows applies it, GPU truncation, things not to retry |
 | [handoff-2026-11-18-setup.md](handoff-2026-11-18-setup.md) | Handoff: project set up from the docs template |

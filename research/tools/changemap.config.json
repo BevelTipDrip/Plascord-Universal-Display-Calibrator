@@ -27,6 +27,7 @@
     "measurement": "meter readings and measurement runs: tools/nearblack_probe.py (spotread driver, averaging, sweeps, DDC/CI), tools/display_power.py",
     "patchgen": "test-patch generators that put exact signal values on screen: tools/hdrgen/ (native HDR10 swapchain, Windows/D3D11)",
     "profiles": "corrections built from measurements and how they are installed: tools/build_mhc2.py (Windows MHC2 LUT profiles), tools/set_hdr_profile.py",
+    "ddc": "monitor control over DDC/CI: tools/ddc/ (backends, safety layer for VCP writes, capabilities parser, CLI)",
     "tooling": "research tools, diagnostics, CI, build scripts (no product behaviour)"
   },
 
