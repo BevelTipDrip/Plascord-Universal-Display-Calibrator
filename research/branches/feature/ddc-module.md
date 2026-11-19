@@ -39,9 +39,11 @@ later, agreed with its owner); any write to a real display.
 
 ## State
 
-Package built `e40689f` (D1): 62 unit tests pass on the fake backend (Python 3.8, 3.10, 3.14). Not run on a
-monitor: the AW3225QF was not reachable on 2026-11-19. Nothing written to any display. Waiting on BevelTipDrip's
-review and the open questions in the plan. Last updated 2026-11-19 by Claude (for BevelTipDrip).
+Package built `e40689f` (D1). Second session (2026-11-19, Claude for BevelTipDrip, who was away): BevelTipDrip's
+answers recorded in the plan (Decisions); D1b built (10 / 12 writable, `--allow`, never list). Next on this
+branch: `scan` and MCCS names, the AW3225QF display module, the probe's switch to the package. Not run on a
+monitor: the AW3225QF was not reachable on 2026-11-19. Nothing written to any display. Last updated 2026-11-19 by
+Claude (for BevelTipDrip).
 
 ## Conflicts with other branches
 
@@ -63,3 +65,4 @@ both sides). Merging needs BevelTipDrip's review and go.
 - 2026-11-19 Claude (for BevelTipDrip): started from main @ 1b1783f.
 - 2026-11-19 Claude: plan doc `808dd43`; package, tests, card, ddc area, CI workflow `e40689f`; read-only check
   on the real monitor not possible (only `WinDisc`). Handoff: handoff-2026-11-19-ddc-module.md.
+- 2026-11-19 Claude (second session, for BevelTipDrip): answers recorded; D1b built (write list, `--allow`, never list).

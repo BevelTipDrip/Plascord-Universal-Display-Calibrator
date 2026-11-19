@@ -5,9 +5,11 @@ import unittest
 
 from ddc.backend import DdcError
 from ddc.fake import FakeBackend, FakeMonitor
-from ddc.safety import (DEFAULT_WRITE_WHITELIST, ReadbackMismatch, RestoreFailed, SafeDdc, WriteRefused)
+from ddc.safety import (DEFAULT_WRITE_WHITELIST, NEVER_WRITE, ReadbackMismatch, RestoreFailed, SafeDdc,
+                        WriteRefused)
 
-VALUES = {0x10: (75, 100), 0x16: (100, 100), 0x18: (100, 100), 0x1A: (100, 100),
+VALUES = {0x04: (0, 1), 0x10: (75, 100), 0x12: (75, 100), 0x14: (11, 12), 0x60: (15, 18), 0xCA: (1, 2),
+          0xD6: (1, 5), 0xE1: (0, 1), 0x16: (100, 100), 0x18: (100, 100), 0x1A: (100, 100),
           0x6C: (50, 255), 0x6E: (50, 255), 0x70: (50, 255)}
 
 
@@ -18,24 +20,31 @@ def make():
 
 
 class Whitelist(unittest.TestCase):
-    def test_default_is_the_probes_six_codes(self):
-        self.assertEqual(sorted(DEFAULT_WRITE_WHITELIST), [0x16, 0x18, 0x1A, 0x6C, 0x6E, 0x70])
+    def test_default_is_brightness_contrast_and_the_probes_six_codes(self):
+        self.assertEqual(sorted(DEFAULT_WRITE_WHITELIST), [0x10, 0x12, 0x16, 0x18, 0x1A, 0x6C, 0x6E, 0x70])
+
+    def test_brightness_and_contrast_writable_by_default(self):
+        be, mon, ddc = make()
+        self.assertEqual(ddc.set(0x10, 40), 40)
+        self.assertEqual(ddc.set(0x12, 60), 60)
+        self.assertEqual(be.writes, [(0, 0x10, 40), (0, 0x12, 60)])
 
     def test_code_outside_whitelist_is_refused_and_nothing_written(self):
         be, mon, ddc = make()
         with self.assertRaises(WriteRefused):
-            ddc.set(0x10, 50)  # brightness: readable, not writable by default
+            ddc.set(0x14, 5)  # colour preset: readable, not writable by default
         self.assertEqual(be.writes, [])
-        self.assertEqual(mon.values[0x10][0], 75)
+        self.assertEqual(mon.values[0x14][0], 11)
 
     def test_reads_are_not_limited_by_the_whitelist(self):
         _, _, ddc = make()
-        self.assertEqual(ddc.get(0x10).current, 75)
+        self.assertEqual(ddc.get(0x14).current, 11)
+        self.assertEqual(ddc.get(0x60).current, 15)  # never-list codes are still readable
 
     def test_custom_whitelist(self):
         be, _, _ = make()
-        ddc = SafeDdc(be, 0, whitelist={0x10: "brightness"})
-        self.assertEqual(ddc.set(0x10, 40), 40)
+        ddc = SafeDdc(be, 0, whitelist={0x14: "colour preset"})
+        self.assertEqual(ddc.set(0x14, 5), 5)
         with self.assertRaises(WriteRefused):
             ddc.set(0x6C, 49)
 
@@ -47,8 +56,8 @@ class Whitelist(unittest.TestCase):
 
     def test_whitelist_is_a_copy(self):
         _, _, ddc = make()
-        ddc.whitelist[0x10] = "brightness"
-        self.assertNotIn(0x10, DEFAULT_WRITE_WHITELIST)
+        ddc.whitelist[0x14] = "colour preset"
+        self.assertNotIn(0x14, DEFAULT_WRITE_WHITELIST)
 
 
 class RangeAndType(unittest.TestCase):
@@ -160,7 +169,7 @@ class Preserve(unittest.TestCase):
         be, mon, ddc = make()
         mon.fail_reads.add(0x6C)  # would raise if it were read
         with self.assertRaises(WriteRefused):
-            with ddc.preserve([0x6C, 0x10]):
+            with ddc.preserve([0x6C, 0x14]):
                 self.fail("block must not run")
         self.assertEqual(be.writes, [])
 
@@ -205,6 +214,82 @@ class Preserve(unittest.TestCase):
         with ddc.preserve([0x6C, 0x6C]) as saved:
             self.assertEqual(saved, {0x6C: 50})
         self.assertEqual(be.writes, [(0, 0x6C, 50)])
+
+
+class NeverList(unittest.TestCase):
+    """Safety rule 0: codes on the never-write list are refused by every route; nothing overrides it."""
+
+    REQUIRED = (0x04, 0x05, 0x06, 0x08, 0x0A, 0x60, 0xD6)
+
+    def test_required_codes_are_on_it(self):
+        for c in self.REQUIRED:
+            self.assertIn(c, NEVER_WRITE, "%02X" % c)
+
+    def test_never_and_default_whitelist_do_not_overlap(self):
+        self.assertEqual(set(NEVER_WRITE) & set(DEFAULT_WRITE_WHITELIST), set())
+
+    def test_whitelist_naming_a_never_code_refuses_to_build(self):
+        be, _, _ = make()
+        for c in NEVER_WRITE:
+            with self.assertRaises(WriteRefused, msg="%02X" % c):
+                SafeDdc(be, 0, whitelist={c: "x", 0x6C: "red black level"})
+        self.assertEqual(be.writes, [])
+
+    def test_whitelist_edited_after_build_still_refuses(self):
+        be, mon, ddc = make()
+        ddc.whitelist[0x60] = "input source"
+        ddc.whitelist[0xD6] = "power"
+        with self.assertRaises(WriteRefused):
+            ddc.set(0x60, 17)
+        with self.assertRaises(WriteRefused):
+            ddc.check_write(0xD6, 4)
+        self.assertEqual(be.writes, [])
+        self.assertEqual(mon.values[0x60][0], 15)
+
+    def test_never_code_cannot_be_preserved_or_restored(self):
+        be, mon, ddc = make()
+        ddc.whitelist[0x04] = "x"
+        mon.fail_reads.add(0x04)  # would raise DdcError (not WriteRefused) if it were read
+        with self.assertRaises(WriteRefused):
+            with ddc.preserve([0x6C, 0x04]):
+                self.fail("block must not run")
+        with self.assertRaises(WriteRefused):
+            ddc.restore({0x6C: 50, 0x04: 1})
+        self.assertEqual(be.writes, [])
+
+    def test_display_module_never_codes_add_to_the_list(self):
+        be, _, _ = make()
+        ddc = SafeDdc(be, 0, never={0xE1: "power (Dell, inverted)"})
+        with self.assertRaises(WriteRefused):
+            ddc.set(0xE1, 1)
+        with self.assertRaises(WriteRefused):
+            SafeDdc(be, 0, whitelist={0xE1: "x"}, never={0xE1: "power"})
+        self.assertIn(0x04, ddc.never)  # the standard list still applies
+        self.assertEqual(be.writes, [])
+
+    def test_never_codes_are_still_readable(self):
+        _, _, ddc = make()
+        self.assertEqual(ddc.get(0xD6).current, 1)
+
+
+class Restore(unittest.TestCase):
+    def test_restore_writes_back_and_reads_back(self):
+        be, mon, ddc = make()
+        ddc.set(0x6C, 40)
+        self.assertEqual(ddc.restore({0x6C: 50}), [])
+        self.assertEqual(mon.values[0x6C][0], 50)
+        self.assertEqual(be.writes, [(0, 0x6C, 40), (0, 0x6C, 50)])
+
+    def test_restore_reports_failures_instead_of_raising(self):
+        _, mon, ddc = make()
+        mon.ignore_writes.add(0x6E)
+        self.assertEqual(ddc.restore({0x6E: 49}), [(0x6E, 49, "read back 50")])
+
+    def test_restore_refuses_unlisted_codes_before_writing(self):
+        be, _, ddc = make()
+        with self.assertRaises(WriteRefused):
+            ddc.restore({0x6C: 50, 0x14: 5})
+        self.assertEqual(be.writes, [])
 
 
 class OnlySafetyWrites(unittest.TestCase):

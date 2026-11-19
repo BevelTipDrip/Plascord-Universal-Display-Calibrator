@@ -10,7 +10,7 @@ commits: e40689f
 prs:
 queue: Q-20
 files: tools/ddc/__init__.py, tools/ddc/backend.py, tools/ddc/windows.py, tools/ddc/fake.py, tools/ddc/safety.py, tools/ddc/caps.py, tools/ddc/cli.py, tools/ddc/__main__.py, tools/ddc/tests/test_safety.py, tools/ddc/tests/test_cli.py, tools/ddc/tests/test_caps.py, tools/ddc/tests/test_backend.py, .github/workflows/unit-tests.yml
-symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main
+symbols: Backend, MonitorInfo, VcpReply, DdcError, parse_vcp_code, open_backend, Dxva2Backend, error_text, FakeBackend, FakeMonitor, SafeDdc, Preserve, DEFAULT_WRITE_WHITELIST, NEVER_WRITE, WriteRefused, ReadbackMismatch, RestoreFailed, parse_capabilities, main
 switches:
 tests:
 docs: plan-ddc-module.md#design, ddc-reference.md
@@ -25,19 +25,27 @@ checked:
 `tools/ddc/` lists monitors, reads any VCP code and writes a few, standard library only. A `Backend`
 (`monitors`, `get_vcp`, `set_vcp`, `capabilities`, `close`) has two implementations: `Dxva2Backend` (Windows
 dxva2 through ctypes, with argtypes, owned handles and Windows error text) and `FakeBackend` (in memory, with
-failure injection and a write log). `SafeDdc` is the only caller of `set_vcp`: whitelist (default 16 / 18 / 1A,
-6C / 6E / 70), 0..max read from the monitor, read back; `preserve(codes)` saves then restores on any exit.
-`python -m ddc list | caps | get | set` (from `tools/`); `set` is a dry run unless `--yes`. Nothing imports it yet.
+failure injection and a write log). `SafeDdc` is the only caller of `set_vcp`: never list (`NEVER_WRITE` plus a
+display module's), whitelist (default 10 / 12, 16 / 18 / 1A, 6C / 6E / 70), 0..max read from the monitor, read
+back; `preserve(codes)` saves then restores on any exit; `restore(saved)` puts back values a caller saved.
+`python -m ddc list | caps | get | set` (from `tools/`); `set` is a dry run unless `--yes`, `--allow` widens the
+whitelist for one call, and a failed or mismatched write is put back.
 
 ## Invariants
 
 - Only `safety.py` calls `.set_vcp(` (test `OnlySafetyWrites` greps the package).
-- `SafeDdc.set`: code in `whitelist`, `int` (not `bool`) in 0..`maximum` from a read just before; a failed read
-  refuses; after the write, a read back other than the value raises `ReadbackMismatch`.
+- `SafeDdc.set`: code not in `never` (checked first, on every call), in `whitelist`, `int` (not `bool`) in
+  0..`maximum` from a read just before; a failed read refuses; after the write, a read back other than the value
+  raises `ReadbackMismatch`.
+- `NEVER_WRITE` holds at least 04 05 06 08 0A 60 D6; `SafeDdc(...)` raises `WriteRefused` when its whitelist names
+  a never code; `preserve()` and `restore()` refuse never codes before reading or writing anything.
+- `NEVER_WRITE` and `DEFAULT_WRITE_WHITELIST` do not overlap (test `NeverList`).
 - `Preserve.__enter__` refuses unlisted codes and reads all codes before anything is written; `__exit__` restores
   every saved code (no range check: the values came from the monitor), keeps going after a failure, and raises
   `RestoreFailed` chained to the exception that ended the block.
-- `cli._set` writes only with `--yes`; exit 2 = refused, nothing written.
+- `cli._set` writes only with `--yes`; exit 2 = refused, nothing written. `--allow` codes go through the same
+  `SafeDdc` (never list, range, read back); after a failed or mismatched write it calls `restore` with the value
+  read just before.
 - `windows.py` touches no Windows API at import; `Dxva2Backend()` raises `DdcError` off Windows.
 - `error_text` passes dxva2's 0xC026xxxx codes to `FormatError` signed (unsigned raises OverflowError).
 
@@ -45,12 +53,15 @@ failure injection and a write log). `SafeDdc` is the only caller of `set_vcp`: w
 
 - [nearblack-probe](../measurement/nearblack-probe.md) has its own copy of this DDC/CI code on
   `feature/nearblack-tint`; it is meant to switch to this package after that branch merges (plan, D4). Until then
-  the two copies can drift: the probe's `DDC_VCPS` and `DEFAULT_WRITE_WHITELIST` must list the same codes.
+  the two copies can drift. Since 2026-11-19 the default whitelist is wider (10, 12) than the probe's `DDC_VCPS`;
+  the probe keeps its own six-code list and passes it as the whitelist when it switches.
 
 ## Evidence
 
 - Unit tests built: 62 run, 0 failures, 1 skipped (the off-Windows check, skipped on Windows), Python 3.8.10 and
   3.14, Windows, 2026-11-19 (`python -m unittest discover -s tools/ddc/tests -t tools`).
+- 2026-11-19 (second session): 10 / 12 writable, `--allow`, the never list, put-back after a failed `set`:
+  built, 82 run, 0 failures, 1 skipped (Python 3.8.10, Windows). Fake backend only.
 - Not run against a monitor: on 2026-11-19 the AW3225QF was not reachable (`list` found only `WinDisc`,
   error 0xC02625E5). No write has been sent to any real display.
 

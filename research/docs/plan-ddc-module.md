@@ -81,10 +81,28 @@ Alternatives considered:
 
 ### Safety rules (in `SafeDdc`; checked by the tests)
 
-1. **Write whitelist.** Only codes in the whitelist are written; default = the probe's six (16 / 18 / 1A gain,
-   6C / 6E / 70 black level). Everything else (input source 60, power D6, factory reset 04, preset 14, display
-   mode DC, brightness 10, contrast 12) is read-only through this package until a person widens the list
-   (open question 5).
+0. **Never list** (`NEVER_WRITE`, plus a display module's own `never` codes). Refused by every route: `SafeDdc`
+   refuses to be built with one in its whitelist, `check_write`, `preserve()` and `restore()` check it again
+   first, and the CLI's `--allow` cannot name one (exit 2, nothing written). Reading them is allowed. The codes:
+
+   | Code | What | Why never | Source of the choice |
+   |---|---|---|---|
+   | 04, 05, 06, 08, 0A | MCCS factory restores (all, brightness/contrast, geometry, colour, TV) | Wipe user settings; not undoable over DDC/CI | Lead agent's brief, 2026-11-19 |
+   | 60 | Input source | A wrong input leaves no picture to recover from | Lead agent's brief |
+   | D6 | Power mode | Standby or off | Lead agent's brief |
+   | B0 | Store / restore settings | Value 2 restores factory defaults (MCCS) | Drafting agent, 2026-11-19 [I, from MCCS] |
+   | CA | OSD / button lock | A locked OSD removes the hand reset every restore message relies on ("reset it in the OSD") | Drafting agent, 2026-11-19 |
+   | 76 | Remote procedure call | Runs a vendor-defined procedure; effect unknown | Drafting agent, 2026-11-19 |
+   | 78 | Display identification data (EDID) operation | Identification data; nothing in this project needs to touch it | Drafting agent, 2026-11-19 |
+
+   A display module can add its own never codes (the AW3225QF's: below, once written). Every row the drafting
+   agent added is for BevelTipDrip to review (open question 12).
+1. **Write whitelist.** Only codes in the whitelist are written. Default (`DEFAULT_WRITE_WHITELIST`): brightness
+   10, contrast 12, gains 16 / 18 / 1A, black levels 6C / 6E / 70 (BevelTipDrip, 2026-11-19, Decisions). Any
+   other code that is not on the never list is writable for one call only when the caller names it: the CLI's
+   `set <vcp> <value> --allow <vcp>[,<vcp>...] --yes`, or `SafeDdc(..., whitelist=...)` in code. `--allow`
+   without `--yes` is a dry run like any other. Range check, read back and restore apply to allowed codes the
+   same way.
 2. **Range check against the monitor.** Before every write: an integer, read the code's current and max from the
    monitor, refuse unless 0 <= value <= max. A read failure refuses the write.
 3. **Read back after every write.** After the write (and the backend's settle delay), read the code again; a value
@@ -96,7 +114,9 @@ Alternatives considered:
    the exception that ended the block, with "reset it in the OSD".
 5. **A person's go before any write to a real display** (START-HERE, Rules). The CLI's `set` is a dry run unless
    `--yes` is given: it prints current, max and the planned value, and writes nothing. `--yes` is how the person
-   who gave the go confirms it; it is not the go.
+   who gave the go confirms it; it is not the go. When a `set --yes` write fails or reads back another value, the
+   CLI writes the value it read just before back (`SafeDdc.restore`, with a read back) and says so, or raises
+   `RestoreFailed` with "reset it in the OSD".
 6. **The raw `set_vcp` is never called outside `safety.py`** (a test greps for it).
 
 ### How it is tested (project rule: every module brings its own tests)
@@ -149,9 +169,11 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
 | D1 | Package, fake backend, safety layer, CLI, unit tests | none (new code, nothing imports it) | unit tests | built `e40689f` (62 tests pass, 2026-11-19) |
-| D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, below) |
-| D3 | One write on the AW3225QF, restored, with a go | | T-DDC2 | not started (needs a go) |
-| D4 | The probe uses the package (after nearblack-tint merges) | | a probe `--ddc-steps` run | not started |
+| D1b | Brightness 10 and contrast 12 writable by default; `--allow`; the never list; old value put back after a failed `set` | none | unit tests | built (this branch, 2026-11-19; commit in the card) |
+| D2 | Read-only check on the AW3225QF: `list`, `caps`, `get` | | T-DDC1 | not started (monitor not reachable 2026-11-19, twice, below) |
+| D2b | Read-only discovery: `scan` of 00-FF, MCCS names | | T-DDC2 | not started |
+| D3 | One write on the AW3225QF, restored, with a go | | T-DDC3 | not started (needs a go) |
+| D4 | The probe uses the package (on this branch: BevelTipDrip, 2026-11-19, Decisions) | | a probe `--ddc-steps` run | not started |
 | D5 | Linux backend | | unit tests on a fake I2C device; a Linux machine | not started |
 
 ## Risks
@@ -168,30 +190,55 @@ coming from read backs. Not done on this branch: the probe belongs to `feature/n
 
 ## Decisions
 
-- None by a person yet. Everything below was assumed by the drafting agent (2026-11-19) and is open.
+BevelTipDrip's answers of 2026-11-19, relayed by the lead agent to a later drafting agent (quoted exactly):
+
+- **Open question 5, the write whitelist: yes to both.** Asked "Should the write list also include brightness (10)
+  and contrast (12)? And should the command line ever accept codes beyond the list?", BevelTipDrip answered:
+  "Yes." Built: 10 and 12 in `DEFAULT_WRITE_WHITELIST`; `set ... --allow <codes> --yes` for other codes, with a
+  never list no option overrides (Safety rules 0 and 1; how `--allow` works and what is on the never list were
+  chosen by the drafting agent, open question 12).
+- **Open question 11, who switches the probe:** asked "Who switches nearblack_probe.py over to the package, and
+  when?", BevelTipDrip answered: "Each branch doesn't have to be a seperate change entirely, it can be a set of
+  changes, we just have to merge cleanly." So the probe's switch (D4) may happen on this branch.
+- **Branches:** "Should we merge the DDC branch into ours instead of into the main repo? Branching off of our
+  working repo probably would have made more sense." Done by the lead agent: this branch was merged into
+  `feature/nearblack-tint` (`4dd9353`) and fast-forwarded to it; it merges back there, not into `main`.
+- **The goal** (from the answer to open question 2, which stays open): "I'd like to be able to control every
+  setting over DDC, maybe even hidden ones." Read as: read every VCP code the monitor answers, including codes its
+  capabilities string does not list, and make each writable only through the safety layer. The first sentence of
+  that answer ("I didn't put it there, so we should investigate what it is and if it has any useful information
+  the monitor.") most likely refers to something else (a stray folder the lead agent is handling); not acted on
+  here.
+
+Everything still under Open questions was assumed by a drafting agent (2026-11-19) and is open.
 
 ## Open questions for BevelTipDrip
 
 1. **Package location and name.** Assumed `tools/ddc/`, imported as `ddc`, run as `python -m ddc` from `tools/`.
    Alternatives: `tools/plascord_ddc/`, or a top-level `plascord/` package once Q-12 decides the layout.
-2. **Core library or display module (S4 sense)?** Q-12 is undecided. Assumed: a core library (it talks the
-   MCCS protocol, which is the same on every monitor); per-display knowledge (which codes do what on the AW3225QF,
-   which presets lock them) would live in a display module that uses it. The change-map area is a new `ddc`;
-   alternatives: under `measurement`, or a `modules` area later.
+2. **Core library or display module (S4 sense)?** Still open: BevelTipDrip's answer (Decisions) set the goal,
+   control of every setting over DDC/CI, hidden ones included, but not the layout. Working assumption (the lead
+   agent's, 2026-11-19): a core library (it talks the MCCS protocol, the same on every monitor) plus a per-display
+   module for the AW3225QF (which codes do what, which presets lock them, safety classes). The change-map area is
+   `ddc`; alternatives: under `measurement`, or a `modules` area later (Q-12).
 3. **dxva2 directly or wrap winddcutil?** Assumed dxva2 through ctypes (what the probe already does; no install).
 4. **Linux: own I2C code or ddcutil?** Assumed: design only, decide when Linux starts (Q-14).
-5. **The write whitelist.** Assumed the probe's six codes (gains, black levels). Add brightness 10 and contrast
-   12? Should the CLI ever take a wider list (e.g. `--allow 10`), or only code?
+5. ~~The write whitelist.~~ Answered: yes to 10 and 12, yes to codes beyond the list (Decisions).
 6. **Read back: exact match, or a tolerance?** Assumed exact: any other value raises.
 7. **CLI shape.** Assumed `list`, `caps`, `get <vcp>...`, `set <vcp> <value>` with a dry run unless `--yes`; codes
    in hex (`6C`, `0x6C`), values in decimal, like the probe's `--ddc-steps`. Wanted: `--json` output (for Q-13),
    a `restore` command, a `sweep` command?
 8. **Restore all saved codes, or only the ones that changed?** Assumed all (as the probe does).
 9. **The CI job.** Assumed a second workflow, `unit-tests`, running the tests on every push and pull request,
-   next to `docs-check`. Keep it, or run the tests only locally?
+   next to `docs-check`. Keep it, or run the tests only locally? Still open: BevelTipDrip asked what a CI job is
+   (2026-11-19) and the lead agent is explaining; the workflow is left as it is.
 10. **Retries and timing.** Kept the probe's: writes 3 tries 0.3 s apart, 0.15 s settle; reads added 2 tries.
     Tune when the AW3225QF's behaviour is measured?
-11. **Who switches the probe to the package, and when** (D4): after nearblack-tint merges, as its own queue row?
+11. ~~Who switches the probe, and when.~~ Answered: it may happen on this branch (Decisions).
+12. **The never list and `--allow`** (Safety rules 0 and 1), chosen by a drafting agent on 2026-11-19: are B0,
+    CA, 76 and 78 right on the never list (beyond the 04 / 05 / 06 / 08 / 0A / 60 / D6 the lead agent's brief
+    named)? Should `--allow` also need a second confirmation for manufacturer codes (E0-FF), or a display
+    module's "ask first" class to be named on the command line?
 
 ## Read-only check 2026-11-19: monitor not reachable
 

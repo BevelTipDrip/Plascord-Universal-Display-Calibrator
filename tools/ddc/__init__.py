@@ -14,8 +14,9 @@ Standard library only, Python 3.8+.
 from .backend import (VCP_NAMES, Backend, DdcError, MonitorInfo, VcpReply, open_backend, parse_vcp_code,
                       vcp_name)
 from .caps import Capabilities, parse_capabilities
-from .safety import (DEFAULT_WRITE_WHITELIST, ReadbackMismatch, RestoreFailed, SafeDdc, WriteRefused)
+from .safety import (DEFAULT_WRITE_WHITELIST, NEVER_WRITE, ReadbackMismatch, RestoreFailed, SafeDdc,
+                     WriteRefused)
 
 __all__ = ["VCP_NAMES", "Backend", "DdcError", "MonitorInfo", "VcpReply", "open_backend", "parse_vcp_code",
-           "vcp_name", "Capabilities", "parse_capabilities", "DEFAULT_WRITE_WHITELIST", "ReadbackMismatch",
+           "vcp_name", "Capabilities", "parse_capabilities", "DEFAULT_WRITE_WHITELIST", "NEVER_WRITE", "ReadbackMismatch",
            "RestoreFailed", "SafeDdc", "WriteRefused"]

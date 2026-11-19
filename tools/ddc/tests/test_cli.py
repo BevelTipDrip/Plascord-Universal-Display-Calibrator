@@ -65,7 +65,9 @@ class Cli(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIn("model FAKE-DEMO", out)
         self.assertRegex(out, r"6C  red black level\s+\[writable here\]")
-        self.assertNotRegex(out, r"10  brightness.*writable")
+        self.assertRegex(out, r"10  brightness.*\[writable here\]")
+        self.assertNotRegex(out, r"14  colour preset.*writable")
+        self.assertRegex(out, r"D6  power mode\s+\[never written\]")
         status, out, _ = run(["caps", "--raw"], be)
         self.assertEqual(out.strip(), DEMO_CAPS)
 
@@ -106,6 +108,79 @@ class Cli(unittest.TestCase):
         status, _, err = run(["set", "16", "96", "--yes"], be)
         self.assertEqual(status, 1)
         self.assertIn("read back 100", err)
+
+    def test_set_allow_writes_a_code_beyond_the_whitelist_only_with_yes(self):
+        be, mon = one()
+        status, out, _ = run(["set", "14", "5", "--allow", "14"], be)  # dry run
+        self.assertEqual(status, 0)
+        self.assertIn("Allowed for this call beyond the whitelist: VCP 14", out)
+        self.assertIn("Dry run", out)
+        self.assertEqual(be.writes, [])
+        status, out, _ = run(["set", "14", "5", "--allow", "14", "--yes"], be)
+        self.assertEqual(status, 0)
+        self.assertEqual(be.writes, [(0, 0x14, 5)])
+        self.assertEqual(mon.values[0x14][0], 5)
+        self.assertIn("set 14 11 --index 0 --allow 14 --yes", out)  # the way back needs --allow too
+
+    def test_set_without_allow_refuses_a_code_beyond_the_whitelist(self):
+        be, _ = one()
+        status, _, err = run(["set", "14", "5", "--yes"], be)
+        self.assertEqual(status, 2)
+        self.assertIn("not in the write whitelist", err)
+        self.assertEqual(be.writes, [])
+
+    def test_set_allow_only_widens_for_the_codes_named(self):
+        be, _ = one()
+        status, _, _ = run(["set", "DC", "2", "--allow", "14", "--yes"], be)
+        self.assertEqual(status, 2)
+        self.assertEqual(be.writes, [])
+
+    def test_set_allow_takes_a_comma_list(self):
+        be, _ = one()
+        status, _, _ = run(["set", "DC", "2", "--allow", "14,0xDC", "--yes"], be)
+        self.assertEqual(status, 0)
+        self.assertEqual(be.writes, [(0, 0xDC, 2)])
+
+    def test_never_list_cannot_be_allowed(self):
+        for code, value in (("04", 1), ("05", 1), ("08", 1), ("60", 17), ("D6", 4), ("CA", 1)):
+            be, mon = one()
+            mon.values.setdefault(int(code, 16), [0, 255])
+            status, _, err = run(["set", code, str(value), "--allow", code, "--yes"], be)
+            self.assertEqual(status, 2, code)
+            self.assertIn("never-write list", err)
+            self.assertEqual(be.writes, [], code)
+
+    def test_never_code_in_allow_refuses_even_another_code(self):
+        be, _ = one()
+        status, _, err = run(["set", "6C", "48", "--allow", "14,D6", "--yes"], be)
+        self.assertEqual(status, 2)
+        self.assertIn("never-write list", err)
+        self.assertEqual(be.writes, [])
+
+    def test_bad_allow_is_a_usage_error(self):
+        be, _ = one()
+        for bad in ("zz", ",", "100"):
+            with self.assertRaises(SystemExit, msg=bad):
+                run(["set", "14", "5", "--allow", bad], be)
+
+    def test_mismatch_puts_the_old_value_back(self):
+        be, mon = one()
+        mon.transform = lambda code, value: value - value % 2  # quantizes: 47 is stored as 46
+        status, _, err = run(["set", "6C", "47", "--yes"], be)
+        self.assertEqual(status, 1)
+        self.assertIn("read back 46", err)
+        self.assertIn("back at 50", err)
+        self.assertEqual(be.writes, [(0, 0x6C, 47), (0, 0x6C, 50)])
+        self.assertEqual(mon.values[0x6C][0], 50)
+
+    def test_failed_write_tries_to_put_the_old_value_back_and_reports_if_it_cannot(self):
+        be, mon = one()
+        mon.fail_writes.add(0x6C)
+        status, _, err = run(["set", "6C", "47", "--yes"], be)
+        self.assertEqual(status, 1)
+        self.assertIn("could not restore", err)
+        self.assertIn("OSD", err)
+        self.assertEqual(be.writes, [])
 
     def test_several_monitors_need_a_choice(self):
         be = FakeBackend([FakeMonitor("A", "fake:0", DEMO_VALUES), FakeMonitor("B", "fake:1", {0x6C: (20, 255)})])
