@@ -153,3 +153,10 @@ and selected: inputs 36 / 42 / 43 / 50 / 64 / 153 read 0.0705 / 0.127 / 0.127 / 
 codes read **15-21% brighter below 0.2 nit**, +9% at 1 nit, while the 100-nit reference is only +1.3% (93.6-93.9 vs
 92.5): the near-black curve itself moved (Q-19). The meter failed once at the start ("Communication protocol
 breakdown") and read normally on the retry.
+
+BevelTipDrip (2026-11-19): "It's likely brighter because the HDR profile I had set was done with windows HDR
+calibration, and I imagine the "neutral" settings is much brighter." Against it [I]: that profile's matrix maps D65 to
+D65 at the same luminance, both profiles have the same min / peak luminance and identity LUT, and a matrix scales
+all levels alike, while the change grows toward black; the 11:17 MediEvil run (T-MED1, one profile all day) also
+read ~15% above T-NB3 near black. To settle it: after T-NT1, the same six codes with
+`HDR Calibrated Profile 11-18-2026 11563.icc` active (Q-19).
