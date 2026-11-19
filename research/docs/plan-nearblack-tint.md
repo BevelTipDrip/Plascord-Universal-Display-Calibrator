@@ -41,7 +41,11 @@ AW3225QF ccmx):
 - **Not the Windows HDR Calibration matrix** [V by arithmetic, 2026-11-18]: the profile's matrix maps D65 XYZ to
   0.3127/0.3290 exactly; it adjusts saturation, not white.
 - **The monitor exposes RGB gain over DDC/CI** [V, read 2026-11-18]: VCP 16 / 18 / 1A (red / green / blue gain) all
-  read 100 of 100; black level 6C / 6E / 70 read 50 of 255. Whether the gains act in the HDR presets is not known.
+  read 100 of 100; black level 6C / 6E / 70 read 50 of 255. Only the OSD preset "Custom Color HDR" offers colour
+  controls; the other HDR presets lock them, so the gains most likely do nothing there [I] (BevelTipDrip,
+  2026-11-18). Custom Color HDR peaks around 450 nits.
+- **Per-channel black level (6C / 6E / 70) may act as a two-point white balance with the gains**: gain for the top
+  of the scale, black level for the bottom. Untested [I].
 - **Absolute xy depends on the meter correction**: with the ccmx, 30 nits reads 0.310/0.321; without it (T-MED2),
   0.309/0.323. Both are short of D65 in y, so the lean is real; how exactly D65 is hit depends on the ccmx, which was
   made on another unit [I].
@@ -54,8 +58,9 @@ AW3225QF ccmx):
 Two mechanisms, for the two parts:
 
 1. **Whole-scale lean: the monitor's own RGB gain (DDC/CI), if it works in HDR.** Lowering red and blue a few
-   steps would raise y at every level, with no 10-bit rounding and for SDR too. Test it first (T-NT1): read white
-   and a 10-nit grey at gains 100/100/100, then with red and blue lowered, then restore. If HDR ignores the gains,
+   steps would raise y at every level, with no 10-bit rounding. Done in the **Custom Color HDR** preset (Decisions).
+   Test it first (T-NT1): greys at 0.1, 1, 10 and 100 nits at gains as found, red 96, blue 96, as found again
+   (`--ddc-steps`, restored after); then the same for black level. If the preset ignores the gains,
    the lean goes into the profile instead: either the MHC2 matrix (a per-channel scale, continuous) or the
    per-channel LUTs below.
 2. **Level-dependent part: per-channel LUTs.**
@@ -77,7 +82,7 @@ Alternatives considered:
 
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
-| NT1 | Probe: measure a few greys at given DDC/CI RGB gains, restoring them after; run it | n/a | T-NT1 | not started |
+| NT1 | Probe `--ddc-steps` (built, checked with fakes); gain and black-level test in Custom Color HDR | n/a | T-NT1 | built, not run |
 | NT2 | Generator `C` command + probe offset mode; offset run in True Black 400 with v2 active | n/a | T-NT2 | not started |
 | NT3 | Per-channel solver (+ global gain or matrix, per NT1); True Black 400 v3 profile; verify | new option, default off | T-NT3 | not started |
 | NT4 | Peak 1000, after Q-2 | n/a | | not started |
@@ -95,6 +100,9 @@ Alternatives considered:
 
 ## Decisions
 
+- Calibrate in the OSD preset **Custom Color HDR** (about 450 nits peak), the only HDR preset with colour
+  controls, through DDC/CI (BevelTipDrip, 2026-11-18: "I am fine with 450 nits, this monitor can't do well with 1000
+  anyway, so I can set it to the custom mode and we can try calibrating it with the DDC commands").
 - Target **D65 (0.3127/0.3290) at every level** of the grey scale, not the panel's own grey (BevelTipDrip,
   2026-11-18: "we should probably fix that and target d65").
 - A little luminance error near black is acceptable to get the colour right; prefer a step slightly too dark over
@@ -106,4 +114,6 @@ Alternatives considered:
 ## Open questions
 
 - The strength of the crushed-over-raised weighting (BevelTipDrip).
-- Whether DDC/CI RGB gain works in the HDR presets (T-NT1).
+- Whether DDC/CI RGB gain and black level act in Custom Color HDR (T-NT1).
+- Does Custom Color HDR replace True Black 400 as the everyday preset, and is Peak 1000 (Q-2) still wanted
+  (BevelTipDrip)?

@@ -46,6 +46,9 @@ HDR_DENSE_CODES = (list(range(0, 20, 5)) + list(range(20, 60)) + list(range(60, 
                    + list(range(310, 521, 30)))
 REF_EVERY = 25  # re-read the reference this often during a sweep (drift / brightness limiting)
 BLACK_VCPS = (0x6C, 0x6E, 0x70)
+# The only VCP codes --ddc-steps may write: per-channel gain and black level (white balance).
+DDC_VCPS = {0x16: "red gain", 0x18: "green gain", 0x1A: "blue gain",
+            0x6C: "red black", 0x6E: "green black", 0x70: "blue black"}
 
 user32 = ctypes.windll.user32
 gdi32 = ctypes.windll.gdi32
@@ -107,6 +110,36 @@ def vcp_set(h, code, value):
             return
         time.sleep(0.3)
     raise RuntimeError(f"VCP {code:02X} write failed")
+
+
+def parse_ddc_steps(text):
+    """'16=96;16=100,1A=96' -> [{0x16: 96}, {0x16: 100, 0x1A: 96}]. Each step changes only the codes it names;
+    the others keep their value from the step before."""
+    steps = []
+    for part in text.split(";"):
+        step = {}
+        for item in filter(None, (s.strip() for s in part.split(","))):
+            code, _, value = item.partition("=")
+            code, value = int(code, 16), int(value)
+            if code not in DDC_VCPS:
+                raise argparse.ArgumentTypeError(f"VCP {code:02X} is not one of "
+                                                 + ", ".join(f"{c:02X}" for c in DDC_VCPS))
+            step[code] = value
+        if step:
+            steps.append(step)
+    if not steps:
+        raise argparse.ArgumentTypeError("no DDC steps given")
+    return steps
+
+
+def restore_vcps(h, saved):
+    """Write back every saved VCP value; what was restored is removed from `saved`."""
+    for c in list(saved):
+        try:
+            vcp_set(h, c, saved[c])
+            print(f"Restored {DDC_VCPS.get(c, hex(c))} (VCP {c:02X}) to {saved.pop(c)}")
+        except Exception as e:
+            print(f"  ! failed to restore VCP {c:02X} to {saved[c]}: {e} -- reset it in the OSD")
 
 
 # ---------------------------------------------------------------- GPU gamma ramp (SDR only)
@@ -350,17 +383,31 @@ def run(args, src):
             levels = HDR_LEVELS if hdr else SDR_LEVELS
         sweep(args.label or "baseline", levels)
 
-        if args.ddc_sweep:
+        steps = args.ddc_steps or ([{c: v for c in BLACK_VCPS} for v in args.ddc_sweep] if args.ddc_sweep else None)
+        if steps:
             mon = open_monitor(args.monitor)
-            for c in BLACK_VCPS:
-                saved_vcp[c] = vcp_get(mon, c)[0]
-            print(f"\nSaved DDC black level R/G/B = {[saved_vcp[c] for c in BLACK_VCPS]}")
-            for val in args.ddc_sweep:
-                for c in BLACK_VCPS:
-                    vcp_set(mon, c, val)
-                print(f"\nDDC black level -> {val} (readback {[vcp_get(mon, c)[0] for c in BLACK_VCPS]})")
+            vcps = sorted({c for s in steps for c in s})
+            for c in vcps:
+                cur, mx = vcp_get(mon, c)
+                bad = [s[c] for s in steps if c in s and not 0 <= s[c] <= mx]
+                if bad:
+                    raise RuntimeError(f"VCP {c:02X} value {bad[0]} is outside the monitor's 0..{mx}")
+                saved_vcp[c] = cur
+            print("\nSaved DDC/CI: " + ", ".join(f"{DDC_VCPS[c]} {saved_vcp[c]}" for c in vcps))
+            if args.ddc_levels:
+                ddc_levels = [float(v) if hdr else int(v) for v in args.ddc_levels.split(",")]
+            else:
+                ddc_levels = HDR_SWEEP if hdr else SDR_SWEEP
+            for step in steps:
+                for c, v in step.items():
+                    vcp_set(mon, c, v)
+                tag = "ddc_" + "_".join(f"{c:02X}={vcp_get(mon, c)[0]}" for c in vcps)
+                print(f"\nDDC/CI -> {tag} (readback)")
                 time.sleep(2.0)
-                sweep(f"ddc_black={val}", HDR_SWEEP if hdr else SDR_SWEEP)
+                sweep(tag, ddc_levels)
+            # Back to the saved values before the end reference, so the drift check compares like with like.
+            restore_vcps(mon, saved_vcp)
+            time.sleep(2.0)
 
         # Drift check: the same reference again at the end.
         ref1 = take(ref_level, settle=2.0)[0]
@@ -374,12 +421,7 @@ def run(args, src):
         print(f"\nERROR: {e}")
     finally:
         if mon is not None and saved_vcp:
-            for c, v in saved_vcp.items():
-                try:
-                    vcp_set(mon, c, v)
-                except Exception as e:
-                    print(f"  ! failed to restore VCP {c:02X} to {v}: {e} -- reset it in the OSD")
-            print(f"Restored DDC black level to {[saved_vcp[c] for c in BLACK_VCPS]}")
+            restore_vcps(mon, saved_vcp)  # aborted or failed mid-sweep
         if mon is not None:
             dxva2.DestroyPhysicalMonitor(mon)
         if ramp is not None:
@@ -415,8 +457,14 @@ def main():
     ap.add_argument("--display-type", default="o", help="spotread -y display type (default 'o' = OLED)")
     ap.add_argument("--ccmx", default=DEFAULT_CCMX if os.path.exists(DEFAULT_CCMX) else None,
                     help="meter correction .ccmx/.ccss (default: HCFR's AW3225QF ccmx; '' for none)")
-    ap.add_argument("--ddc-sweep", type=lambda s: [int(x) for x in s.split(",")],
-                    help="comma list of DDC black-level values to test, e.g. 50,48,46,44,52")
+    ddc = ap.add_mutually_exclusive_group()
+    ddc.add_argument("--ddc-sweep", type=lambda s: [int(x) for x in s.split(",")],
+                     help="comma list of DDC black-level values to test on all three channels, e.g. 50,48,46,44,52")
+    ddc.add_argument("--ddc-steps", type=parse_ddc_steps,
+                     help="DDC/CI settings to measure in turn, ';' between steps, hex VCP=value, e.g. "
+                          "'16=96;16=100,1A=96;1A=100' (gain 16/18/1A, black level 6C/6E/70); each step keeps the "
+                          "values it does not name; everything is restored before the end reference")
+    ap.add_argument("--ddc-levels", help="comma list measured at each DDC step (default: a short sweep)")
     ap.add_argument("--monitor", default="AW3225QF", help="substring of the monitor name for DDC/CI")
     ap.add_argument("--outdir", default=DATA_DIR, help="where the CSV goes (default: research/docs/data)")
     args = ap.parse_args()

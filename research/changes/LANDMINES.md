@@ -18,6 +18,9 @@ When an item is acted on, do not delete it: add its outcome in bold with the sta
 
 - **`build_mhc2.py` defaults `--base` to a file on one machine** (`DEFAULT_BASE`); anyone else gets a
   FileNotFoundError until they pass `--base`. Card: mhc2-lut.
+- **`build_mhc2.py` averages every HDR row per code, whatever the `run` column says**: a CSV from
+  `--ddc-steps` / `--ddc-sweep` mixes readings at other monitor settings into the fit. Build only from runs without
+  DDC steps (or filter by `run`). Cards: mhc2-lut, nearblack-probe.
 - **`Response.__call__` clamps outside the measured codes** (returns the end values), so `snap_lut` compares
   against flat light there. Harmless while snapping stops above `--blend-start`; a trap if that range grows.
   Cards: mhc2-lut, lut-snap.

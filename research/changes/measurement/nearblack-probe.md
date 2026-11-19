@@ -8,9 +8,9 @@ origin: ours (averaging rule from HCFR, arthur-liberman/hcfr-code ArgyllMeterWra
 owner: BevelTipDrip
 commits: c491027
 prs:
-queue: Q-6, Q-7, Q-9
+queue: Q-1, Q-6, Q-7, Q-9
 files: tools/nearblack_probe.py
-symbols: pq10, read_meter, adapt_reads, measure, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR
+symbols: pq10, read_meter, adapt_reads, measure, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS
 switches:
 tests: T-NB1, T-NB3, T-NB9
 docs: measurement-reference.md, plan-hdr-nearblack-lut.md#design
@@ -26,7 +26,8 @@ checked:
 generator, SDR through a full-screen tkinter window with the GPU gamma ramp set linear. For each level it runs
 ArgyllCMS `spotread -O` (with a meter correction), averages 1-5 readings by HCFR's "Adapt" rule, and records Y, x,
 y against the exact target of the code sent. It reads a reference (100 nits / white) before the sweep, every 25
-patches and at the end; `--ddc-sweep` repeats key levels at several DDC/CI black levels. It writes
+patches and at the end. `--ddc-steps` (or the older `--ddc-sweep`, black level on all channels) measures
+`--ddc-levels` at each of several DDC/CI settings (per-channel gain 16/18/1A, black level 6C/6E/70). It writes
 `research/docs/data/nearblack-<label>-<date>.csv`.
 
 ## Invariants
@@ -35,6 +36,9 @@ patches and at the end; `--ddc-sweep` repeats key levels at several DDC/CI black
   only warns); an end reference more than 5% off marks the CSV `-INVALID`.
 - HDR targets are `pq10(n)`: the luminance of the whole 10-bit code actually sent, not the nits requested.
 - `finally:` restores the gamma ramp and every DDC/CI value it changed, and closes the generator.
+- DDC/CI writes only the codes in `DDC_VCPS`, only within the maximum the monitor reports, and every value is
+  restored before the end reference, so the drift check compares the same settings.
+- A CSV with DDC steps holds rows measured at other settings: never build a profile from it (Landmines).
 - `data_path` never overwrites a file; the label (test ID) is in the name.
 - `build_mhc2.py` reads the CSV columns by name (`mode`, `code`, `Y_cdm2`): rename them only together.
 - The display is held awake from `main()` on (`SetThreadExecutionState`).
@@ -49,8 +53,12 @@ patches and at the end; `--ddc-sweep` repeats key levels at several DDC/CI black
 
 - T-NB1 to T-NB9 (2026-11-18) ran with it; T-NB9 reference drift +0.4%.
 - `data_path` naming: built, checked by calling it (2026-11-18); not used in a measurement run yet.
+- `--ddc-steps`: built 2026-11-18, checked with fake meter / generator / DDC calls (restores to the saved values
+  before the end reference; rejects unknown VCP codes); not run on the monitor yet (T-NT1).
 
 ## History and pitfalls
 
 - 2026-11-18: the display slept mid-run and the run read nothing; added the wake lock and the reference checks.
 - 2026-11-18: CSVs moved from `measurements/` to `research/docs/data/` with test-ID names (project setup).
+- 2026-11-18: DDC values used to be restored only at exit, after the end reference: a gain step would have shown
+  as drift and marked the run INVALID. Now restored before it (Q-1).
