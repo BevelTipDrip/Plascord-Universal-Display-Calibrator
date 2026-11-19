@@ -50,6 +50,7 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 
 | What | Why it failed | Where written up |
 |---|---|---|
+| `spotread -Y A` (fixed integration) to speed up near black | Reads 0 at 0.05 nit: too short to count any light | Section 7, T-INT1 |
 | Trusting readings under ~0.015 nit as zero light | Meter floor: the ColorMunki reads 0 there whether or not the panel emits | BevelTipDrip (2026-11-18): "most meters are inaccurate below a certain level"; Q-5 |
 | A `.bat` build script | `(x86)` in the VS path breaks cmd blocks | [building-and-tools.md](building-and-tools.md#traps) |
 
@@ -58,3 +59,16 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 - ArgyllCMS 3.5.0 `spotread -e -y o -x -O -X <ccmx>`: emissive, OLED type, one reading per call.
 - Readings per patch follow HCFR's "Adapt" rule: 5 under 1 cd/m2, 4 under 2, 3 under 5, 2 under 10, then 1.
   Speed-ups are queued (Q-9).
+
+## 7. Meter timing (2026-11-19)
+
+**T-INT1: adaptive vs fixed integration (2026-11-19 02:20, run by Claude for BevelTipDrip, log `data/meter-t-int1-adaptive-vs-fixed-2026-11-19.csv`).**
+Grey code 36 (neutral profile), five readings each. Adaptive (Argyll's default): 9.5 s per reading, Y 0.0498, spread
+1.5%, xy spread 0.0008. Fixed (`spotread -Y A`): 2.4 s per reading, **Y = 0 every time**: its integration is too
+short to count any light at 0.05 nit. Code 64 was not reached (the test script divided by the zero readings).
+
+- The ColorMunki Display (i1d3) has no dark calibration; start-up is ~1.3 s. Near black the time is the adaptive
+  integration on every reading (~7-10 s; 14.6 s on black). HCFR feels faster because it uses a fixed 0.4 s
+  integration and fewer, brighter patches.
+- One `spotread` session per run is not possible through a pipe (it reads the console) and would save ~1.3 s.
+- The lever is fewer readings per patch (`--agree`, Q-9).

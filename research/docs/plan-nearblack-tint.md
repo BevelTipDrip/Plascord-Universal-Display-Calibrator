@@ -244,3 +244,13 @@ BevelTipDrip's suspicion of the profile is answered: not the main cause.
 Consequences: measure only on a settled panel, and check it first: the six T-DRIFT codes against T-NB3 within ~3%
 (measurement-reference.md, "Before every test"). v2 should fit again on a settled panel (T-NT0's mismatch was the
 drift). T-NT1's near-black readings were taken on an unsettled panel.
+
+**Q-19, later the same night (2026-11-19 02:20, T-INT1, neutral profile):** code 36 read 0.0498, 16% below T-DRIFT2's
+0.0594 an hour earlier with the same profile, while the 100-nit reference read 95.5 (vs 92.8-94.6). So 01:30 was
+not the panel settling but passing through: near black was still moving. Its chromaticity stayed within ~0.002 all
+night (xy 0.269-0.272 / 0.239-0.244) while its luminance moved ~20%. Candidates (BevelTipDrip, 2026-11-19: "all
+plausible"): meter temperature (the i1d3's dark pulse rate rises with temperature and matters only at low counts),
+panel drift; less likely: the ccmx not applied (would shift all levels ~4.5% alike), patch timing (no trend within a
+47 s series). The meter was not moved (BevelTipDrip). Decision (BevelTipDrip, 2026-11-19): the drift (+-10-20%) is
+small next to the original lift (2.2-2.8x) and the tint (Delta u'v' 0.05-0.10), so stage 1 runs with the settle check
+as a log (`--settle-tol 0.25`) and Q-19 stays open.
