@@ -322,6 +322,105 @@ def rgb_search(take, T, start, white, args, log):
     return best, seen[best], len(seen)
 
 
+# ---------------------------------------------------------------- anchors: colour pass, then brightness pass
+V2_PROFILE = os.path.join(HERE, "..", "profiles", "AW3225QF TB400 near-black fix v2.icc")
+# Input codes measured as anchors: below ~0.2 nit roughly one per distinct v2 output step, then 0.5, 1, 3, 10, 30,
+# 100 and 200 nits.
+ANCHOR_CODES = "31,35,40,47,52,56,64,75,85,120,153,218,307,402,520,594"
+# The six codes compared with T-NB3 to tell whether the panel has settled (T-DRIFT1/2, Q-19).
+SETTLE_CODES = (36, 42, 43, 50, 64, 153)
+
+
+def mhc2_luts(path):
+    """The three MHC2 LUTs of an ICC profile, each resampled to 1024 entries (0..1)."""
+    import struct
+    d = open(path, "rb").read()
+    n = struct.unpack_from(">I", d, 128)[0]
+    tags = {struct.unpack_from(">4s", d, 132 + 12 * i)[0]: struct.unpack_from(">II", d, 136 + 12 * i)
+            for i in range(n)}
+    off, size = tags[b"MHC2"]
+    t = d[off:off + size]
+    count = struct.unpack_from(">I", t, 8)[0]
+    luts = []
+    for lo in struct.unpack_from(">III", t, 24):
+        raw = [struct.unpack_from(">i", t, lo + 8 + 4 * i)[0] / 65536 for i in range(count)]
+        out = []
+        for i in range(1024):
+            f = i / 1023 * (count - 1)
+            k = min(int(f), count - 2)
+            out.append(raw[k] + (f - k) * (raw[k + 1] - raw[k]))
+        luts.append(out)
+    return luts
+
+
+def sent_codes(luts, code):
+    """The whole 10-bit codes the display pipeline sends for an input code through these LUTs (it truncates,
+    T-NB7; the 1e-4 keeps an exact i/1023 at i)."""
+    return tuple(int(math.floor(l[code] * 1023 + 1e-4)) for l in luts)
+
+
+def anchor_pass(take, T, start, white, args, log):
+    """Colour pass, then brightness pass, from `start` (the codes v2 sends for this input).
+
+    Colour: green raised one code at a time, then blue moved down (and up by one), red held; each run stops after
+    two steps in a row that bring xy no closer to the white (the panel's steps near black often change nothing for a
+    code or two); only readings within 0.7-1.5x of T count. Brightness: all three channels shifted together, one code
+    at a time up or down from the colour result, kept by search_cost (too bright x --raised-weight), stopping after
+    two steps that do not improve it. Returns (best codes, best reading, number of readings)."""
+    seen = {}
+
+    def m(p):
+        p = tuple(min(max(int(c), 0), 1023) for c in p)
+        if p not in seen:
+            seen[p] = take(("rgb",) + p)
+            log(p, seen[p])
+        return seen[p]
+
+    def colour_err(res):
+        Y, x, y = res[:3]
+        return duv(x, y, white) if Y > 0 and 0.7 <= Y / T <= 1.5 else float("inf")
+
+    def walk(base, delta, score, limit):
+        """Step `delta` (codes per channel) from `base` while `score` improves; give up after two misses."""
+        best, best_s, misses = base, score(m(base)), 0
+        p = list(base)
+        for _ in range(limit):
+            p = [c + d for c, d in zip(p, delta)]
+            s = score(m(tuple(p)))
+            if s < best_s:
+                best, best_s, misses = tuple(p), s, 0
+            else:
+                misses += 1
+                if misses >= 2:
+                    break
+        return best
+
+    p0 = (start, start, start) if isinstance(start, int) else tuple(start)
+    m(p0)
+    # Two ways to cancel the magenta: add green (green up, then blue down / up by one), or take magenta away (red and
+    # blue down together, then green up). Near black the green step up can be too big a jump; the darker route is
+    # the one BevelTipDrip prefers (slightly crushed over raised). The final pick below sees both.
+    p = walk(p0, (0, 1, 0), colour_err, args.anchor_max)
+    p = walk(walk(p, (0, 0, -1), colour_err, args.anchor_max), (0, 0, 1), colour_err, 1)
+    q = walk(p0, (-1, 0, -1), colour_err, args.anchor_max)
+    walk(q, (0, 1, 0), colour_err, args.anchor_max)
+    p = min((p, q), key=lambda k: search_cost(seen[k], T, white, args.raised_weight))
+    p = min(seen, key=lambda k: search_cost(seen[k], T, white, args.raised_weight))  # best colour + brightness so far
+    cost = lambda res: search_cost(res, T, white, args.raised_weight)
+    for direction in (-1, +1):                                 # brightness: all three together
+        q, misses = list(p), 0
+        for _ in range(args.anchor_max):
+            q = [c + direction for c in q]
+            if cost(m(tuple(q))) < cost(m(p)):
+                p, misses = tuple(q), 0
+            else:
+                misses += 1
+                if misses >= 2:
+                    break
+    best = min(seen, key=lambda k: search_cost(seen[k], T, white, args.raised_weight))
+    return best, seen[best], len(seen)
+
+
 # ---------------------------------------------------------------- patch sources
 class SdrWindow:
     """Full-screen tkinter window with a centred patch of an 8-bit grey (Windows HDR off)."""
@@ -528,6 +627,25 @@ def run(args, src):
                 first = f"{lvl:>7g} {code:>5}" if hdr else f"{code:>5}"
                 print(f"{first} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
 
+        if args.settle_check:
+            # Has the panel settled? Its near black ran up to ~20% high for hours after a power cut (Q-19).
+            import build_mhc2  # same folder: its fit of the baseline grey run
+            base = build_mhc2.Response(build_mhc2.load_response(args.settle_check, 0.008))
+            print(f"\n[settle] {len(SETTLE_CODES)} codes against {os.path.basename(args.settle_check)}")
+            devs = []
+            for c in SETTLE_CODES:
+                Y, x, y, sd, n = take(("code", c))
+                T = nits_from_pq(c / 1023)
+                rows.append(["settle", "hdr", round(T, 5), c, T, Y, sd, x, y, n, c, c, c])
+                save()
+                devs.append(Y / base(c) - 1)
+                print(f"  code {c:>4}: {Y:.5f} vs baseline {base(c):.5f} ({devs[-1]:+.1%})", flush=True)
+            worst = max(devs, key=abs)
+            if abs(worst) > args.settle_tol and not args.diagnostic:
+                raise RuntimeError(f"panel not settled: {worst:+.1%} against the baseline (limit "
+                                   f"{args.settle_tol:.0%}); wait and check again")
+            print(f"  settled: within {abs(worst):.1%} of the baseline")
+
         if args.search:
             if not hdr:
                 raise RuntimeError("--search is for --mode hdr")
@@ -570,6 +688,45 @@ def run(args, src):
                 print(f"{code:>5} {T:>9.5f} {b[0]:>5} {b[1]:>5} {b[2]:>5} {Y:>9.5f} {Y / T:>6.2f} {x:>6.4f} "
                       f"{y:>6.4f} {duv(x, y, white):>6.4f}")
 
+        if args.anchors:
+            if not hdr:
+                raise RuntimeError("--anchors is for --mode hdr")
+            luts = mhc2_luts(args.start_profile)
+            white = tuple(float(v) for v in args.white.split(","))
+            codes = [int(c) for c in (ANCHOR_CODES if args.anchors == "default" else args.anchors).split(",")]
+            print(f"\n[anchors] D65 target xy {white[0]:.4f}/{white[1]:.4f}, {len(codes)} anchors, starting from "
+                  f"{os.path.basename(args.start_profile)}, too-bright errors x{args.raised_weight:g}")
+            summary, since_ref = [], 0
+            for code in codes:
+                if since_ref >= REF_EVERY:
+                    r = take(ref_level, settle=1.0)[0]
+                    print(f"  (reference {r:.2f} cd/m2, {r / ref0 - 1:+.1%} vs start)", flush=True)
+                    since_ref = 0
+                T = nits_from_pq(code / 1023)
+                start = sent_codes(luts, code)
+
+                def log(p, res, code=code, T=T):
+                    Y, x, y, sd, n = res
+                    print(f"  in {code:>4}  rgb {p[0]:>4} {p[1]:>4} {p[2]:>4}: Y {Y:.5f} ({Y / T:.2f}x)  "
+                          f"xy {x:.4f}/{y:.4f}  duv {duv(x, y, white):.4f}  ({n} reads)", flush=True)
+                    rows.append([f"anchor_{code}", "hdr", code, code, T, Y, sd, x, y, n] + list(p))
+                    save()
+
+                best, res, count = anchor_pass(take, T, start, white, args, log)
+                since_ref += count
+                Y, x, y, sd, n = res
+                rows.append(["best", "hdr", code, code, T, Y, sd, x, y, n] + list(best))
+                save()
+                summary.append((code, T, start, best, Y, x, y, count))
+                print(f"  => in {code}: v2 sends {start}, best {best}: {Y / T:.2f}x, xy {x:.4f}/{y:.4f}, "
+                      f"duv {duv(x, y, white):.4f} ({count} patches)\n", flush=True)
+            print(f"\n[anchors]  best per anchor (target D65 {white[0]:.4f}/{white[1]:.4f})")
+            print(f"{'in':>5} {'target':>9} {'v2 sends':>14} {'best r g b':>14} {'measured':>9} {'ratio':>6} {'x':>6} "
+                  f"{'y':>6} {'duv':>6} {'patches':>7}")
+            for code, T, s, b, Y, x, y, count in summary:
+                print(f"{code:>5} {T:>9.5f} {s[0]:>4} {s[1]:>4} {s[2]:>4} {b[0]:>4} {b[1]:>4} {b[2]:>4} {Y:>9.5f} "
+                      f"{Y / T:>6.2f} {x:>6.4f} {y:>6.4f} {duv(x, y, white):>6.4f} {count:>7}")
+
         if args.levels:
             levels = [float(v) if hdr else int(v) for v in args.levels.split(",")]
         elif args.dense:
@@ -578,7 +735,7 @@ def run(args, src):
             levels = [("code", c) for c in HDR_DENSE_CODES]
         else:
             levels = HDR_LEVELS if hdr else SDR_LEVELS
-        if not args.search:
+        if not (args.search or args.anchors):
             sweep(args.label or "baseline", levels)
 
         steps = args.ddc_steps or ([{c: v for c in BLACK_VCPS} for v in args.ddc_sweep] if args.ddc_sweep else None)
@@ -670,6 +827,15 @@ def main():
                     help="hdr: for each --search-codes input, search the per-channel codes that give its PQ "
                          "luminance at --white (run it with an identity / uncorrected HDR profile)")
     ap.add_argument("--search-codes", default=SEARCH_CODES, help="comma list of 10-bit input codes to solve")
+    ap.add_argument("--anchors", help="hdr: comma list of input codes (or 'default') to correct by a colour pass "
+                                      "then a brightness pass, starting from the codes --start-profile sends; run it "
+                                      "with an identity (neutral) HDR profile")
+    ap.add_argument("--start-profile", default=os.path.normpath(V2_PROFILE),
+                    help="profile whose LUT gives each anchor's starting codes (default: True Black 400 v2)")
+    ap.add_argument("--anchor-max", type=int, default=8, help="most codes one anchor pass moves a channel (default 8)")
+    ap.add_argument("--settle-check", help="baseline grey CSV (e.g. T-NB3): first read the six settle codes and stop "
+                                           "if the panel is off it by more than --settle-tol")
+    ap.add_argument("--settle-tol", type=float, default=0.03, help="settle check limit (default 0.03 = 3%%)")
     ap.add_argument("--response", help="grey run CSV (dense) whose fit gives each search's luminance-correct start")
     ap.add_argument("--white", default=D65, help="target white point x,y (default D65 0.3127,0.3290)")
     ap.add_argument("--raised-weight", type=float, default=2.0,

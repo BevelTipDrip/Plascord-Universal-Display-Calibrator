@@ -10,7 +10,7 @@ commits: c491027, 6feab98, a63d1d1
 prs:
 queue: Q-1, Q-6, Q-7, Q-9
 files: tools/nearblack_probe.py
-symbols: pq10, read_meter, adapt_reads, measure, readings_agree, rows_for, CSV_HEADER, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS, rgb_search, search_cost, duv, solve3, xyz_of, SEARCH_CODES
+symbols: pq10, read_meter, adapt_reads, measure, readings_agree, rows_for, CSV_HEADER, anchor_pass, mhc2_luts, sent_codes, ANCHOR_CODES, SETTLE_CODES, V2_PROFILE, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS, rgb_search, search_cost, duv, solve3, xyz_of, SEARCH_CODES
 switches:
 tests: T-NB1, T-NB3, T-NB9
 docs: measurement-reference.md, plan-hdr-nearblack-lut.md#design
@@ -33,6 +33,10 @@ patches and at the end. `--ddc-steps` (or the older `--ddc-sweep`, black level o
 per-channel codes (generator `C`) whose light is closest to that input's PQ luminance at `--white` (D65): it
 measures how X, Y, Z move per code of each channel, takes Newton steps to the target, and keeps the best reading
 by `search_cost` (colour in u'v', luminance in log, too bright x`--raised-weight`). Rows carry `r`, `g`, `b`.
+`--anchors` starts each anchor from the codes `--start-profile` (v2) sends and walks: green up, then blue; or red
+and blue down together ("magenta down", the darker route); then all three together for brightness; the best reading
+by `search_cost` wins. `--settle-check <baseline CSV>` first reads `SETTLE_CODES` and stops if the panel is more
+than `--settle-tol` off the baseline (Q-19).
 
 ## Invariants
 
@@ -44,7 +48,7 @@ by `search_cost` (colour in u'v', luminance in log, too bright x`--raised-weight
   restored before the end reference, so the drift check compares the same settings.
 - A CSV with DDC steps or search rows holds non-grey readings: `build_mhc2.py` skips rows whose `run` starts with
   `ddc_` or whose `r`, `g`, `b` are not all equal to `code`; keep those column names.
-- `--search` must run with an identity (uncorrected) HDR profile: the codes it finds are the LUT's outputs, so a
+- `--search` and `--anchors` must run with an identity (uncorrected) HDR profile: the codes it finds are the LUT's outputs, so a
   LUT already in the pipeline would be applied twice.
 - `data_path` never overwrites a file; the label (test ID) is in the name. The CSV is rewritten after every patch
   (`save`), so a stopped run keeps its readings; a run that fails the drift check is renamed `-INVALID` at the end.
@@ -67,6 +71,10 @@ by `search_cost` (colour in u'v', luminance in log, too bright x`--raised-weight
 - `--search`: built 2026-11-18, checked on a simulated panel (green lagging near black, light changing every 3
   codes below code 60): all 24 default codes within 0.0045 Delta u'v' of D65, luminance 0.90-1.03x near black and
   1.00x from 0.1 nit up, 184 readings. Run 2026-11-18/19 (T-NT1): does not converge near black (coarse steps).
+- `--anchors`: built 2026-11-19, checked on a simulated panel (T-NB3's grey staircase per channel, green lagging
+  near black): 0.1-30 nits within Delta u'v' 0.003 at 0.92-1.00x in 15-29 patches; 0.02-0.07 nit 0.006-0.025 (the
+  simulated steps' limit, brute-force checked at code 47) at 0.64-1.13x. Single-channel walks missed the darker
+  red+blue route until the magenta-down walk was added. Not run on the meter yet.
 - `--agree` and saving after each patch: built 2026-11-19, checked with a fake meter (26 standard levels: 100
   readings -> 49; noisy levels keep the full count; an aborted run keeps its rows; drift renames to -INVALID);
   not run on the meter yet.

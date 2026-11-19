@@ -82,6 +82,20 @@ Alternatives considered:
 - Measuring each primary alone near black: single-channel light there is mostly under the meter's floor.
 - Offsetting channels by eye: not repeatable; the project measures.
 
+### Revised method (2026-11-19, BevelTipDrip): anchors, colour pass then brightness pass
+
+The Newton search did not converge near black (T-NT1). BevelTipDrip: start from v2 ("use the V2 profile, and then
+attempt to adjust color there. Then do another pass to adjust brightness") and measure at "a less granular interval,
+and then interpolate the color adjustment for the in-between values". Built as `nearblack_probe.py --anchors`:
+
+- measured with the neutral profile, each anchor starting from the codes v2 sends (all panel codes reachable);
+- colour pass: green up, or red and blue down together (the darker route); brightness pass: all three together;
+  the best reading by colour plus crush-weighted luminance wins;
+- anchors: below ~0.2 nit about one per distinct v2 output step; above, 0.5, 1, 3, 10, 30, 100, 200 nits, with
+  per-channel gains (light ratios) interpolated in log luminance between them;
+- runs in stages with a check-in after each (BevelTipDrip: "we should check in on the process so it doesn't run for
+  an hour+"); each run starts with the settle check (`--settle-check`, Q-19).
+
 ## Stages
 
 | Stage | What | Switch | Test | State |
