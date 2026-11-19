@@ -57,6 +57,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 | Q-10 | bug | `set_hdr_profile.py --set` does not change the default when the profile is already associated | | | confirmed | Needs remove + add, or ColorProfileSetDisplayDefaultAssociation. [set-hdr-profile](../changes/profiles/set-hdr-profile.md) |
 | Q-11 | bug | Windows loses the monitor from colour management (Settings and mscms) | | | confirmed | Twice on 2026-11-18: no monitor under `\\.\DISPLAY1` in EnumDisplayDevices while PnP, WMI and DisplayConfig still have it; Settings crashes on Add profile. [profiles-reference.md](profiles-reference.md#4-symptom---first-place-to-look) Related: Q-22 (two device instances, found 2026-11-19). |
 | Q-22 | bug | Second monitor device instance has no profile association: Windows can fall back to Dell's identity TB400 profile | | | found (on hold) | On hold until we know what the second instance is (BevelTipDrip, 2026-11-19). [profiles-reference.md](profiles-reference.md#7-dells-monitor-driver-and-the-profile-windows-falls-back-to-found-2026-11-19) |
+| Q-23 | bug | `display_power.py wake`: SendInput gets a 48-byte INPUT (64-bit wants 40) and fails; only the ES_DISPLAY_REQUIRED call wakes the display | | | found | Found 2026-11-19 building `ddc/power.py` (fixed there, feature/ddc-module 2a5f8cd). [plan-ddc-module.md on feature/ddc-module] |
 
 ## Later
 
