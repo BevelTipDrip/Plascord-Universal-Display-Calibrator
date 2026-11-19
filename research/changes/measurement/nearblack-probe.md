@@ -10,7 +10,7 @@ commits: c491027, 6feab98, a63d1d1
 prs:
 queue: Q-1, Q-6, Q-7, Q-9
 files: tools/nearblack_probe.py
-symbols: pq10, read_meter, adapt_reads, measure, readings_agree, rows_for, CSV_HEADER, anchor_pass, mhc2_luts, sent_codes, ANCHOR_CODES, SETTLE_CODES, V2_PROFILE, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS, rgb_search, search_cost, duv, solve3, xyz_of, SEARCH_CODES
+symbols: pq10, read_meter, adapt_reads, measure, readings_agree, rows_for, CSV_HEADER, anchor_pass, centre_on_step, mhc2_luts, sent_codes, ANCHOR_CODES, SETTLE_CODES, V2_PROFILE, SdrWindow, HdrGenerator, GammaRamp, data_path, run, HDR_LEVELS, HDR_DENSE_CODES, REF_EVERY, DATA_DIR, parse_ddc_steps, restore_vcps, DDC_VCPS, rgb_search, search_cost, duv, solve3, xyz_of, SEARCH_CODES
 switches:
 tests: T-NB1, T-NB3, T-NB9
 docs: measurement-reference.md, plan-hdr-nearblack-lut.md#design
@@ -35,7 +35,8 @@ measures how X, Y, Z move per code of each channel, takes Newton steps to the ta
 by `search_cost` (colour in u'v', luminance in log, too bright x`--raised-weight`). Rows carry `r`, `g`, `b`.
 `--anchors` starts each anchor from the codes `--start-profile` (v2) sends and walks: green up, then blue; or red
 and blue down together ("magenta down", the darker route); then all three together for brightness; the best reading
-by `search_cost` wins. `--settle-check <baseline CSV>` first reads `SETTLE_CODES` and stops if the panel is more
+by `search_cost` wins; then a polish (one code on each channel alone, up to 3 rounds) and `centre_on_step`
+(move a channel off the edge of a panel step when the other side is flat). `--settle-check <baseline CSV>` first reads `SETTLE_CODES` and stops if the panel is more
 than `--settle-tol` off the baseline (Q-19).
 
 ## Invariants
@@ -75,6 +76,10 @@ than `--settle-tol` off the baseline (Q-19).
   near black): 0.1-30 nits within Delta u'v' 0.003 at 0.92-1.00x in 15-29 patches; 0.02-0.07 nit 0.006-0.025 (the
   simulated steps' limit, brute-force checked at code 47) at 0.64-1.13x. Single-channel walks missed the darker
   red+blue route until the magenta-down walk was added. Not run on the meter yet.
+- Stage 1 run 2026-11-19 (T-NT2): 30 nits 1.00x / 0.0013; 1 nit 0.98x / 0.0040; 0.05 nit 0.76x / 0.032 (from
+  0.45x / 0.080). Polish and step centring added after it: on the simulated panel, a one-code shift of the steps'
+  edges after solving moved input 47 from 0.90x / 0.026 to 0.54x / 0.054 without centring, not at all with it;
+  input 64 came out worse with it (0.016 after the shift). Not run on the meter yet.
 - `--agree` and saving after each patch: built 2026-11-19, checked with a fake meter (26 standard levels: 100
   readings -> 49; noisy levels keep the full count; an aborted run keeps its rows; drift renames to -INVALID);
   not run on the meter yet.

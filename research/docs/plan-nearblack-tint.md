@@ -254,3 +254,23 @@ panel drift; less likely: the ccmx not applied (would shift all levels ~4.5% ali
 47 s series). The meter was not moved (BevelTipDrip). Decision (BevelTipDrip, 2026-11-19): the drift (+-10-20%) is
 small next to the original lift (2.2-2.8x) and the tint (Delta u'v' 0.05-0.10), so stage 1 runs with the settle check
 as a log (`--settle-tol 0.25`) and Q-19 stays open.
+
+## T-NT2: anchors stage 1, inputs 47, 153, 402 (2026-11-19 02:57-03:11, run by Claude for BevelTipDrip, build `e57d1b9`, log `data/nearblack-t-nt2-stage1-2026-11-19.csv`)
+
+Neutral profile; settle check as a log (`--settle-tol 0.25`); 6 settle codes + 57 patches in 14 min (~13 s per
+patch with `--agree`). Reference 94.4, end -0.3%.
+
+| Anchor | Start (v2's codes) | Start | Best | Best result |
+|---|---|---|---|---|
+| 402 (30 nits) | 401/401/401 | 0.97x, Delta u'v' 0.0041 | 402/405/398 | 1.00x, 0.0013 |
+| 153 (1 nit) | 136/136/136 | 0.98x, 0.0086 | 132/136/132 | 0.98x, 0.0040 (x 0.3075: overshot toward blue-green) |
+| 47 (0.05 nit) | 35/35/35 | 0.45x, 0.080 | 34/36/34 | 0.76x, 0.032 (green 35 -> 36 did most of it; 37 adds nothing) |
+
+**The near-black drift is step edges moving** [V]: settle codes 36 -7.5%, 42 -9%, 43 -23%, 50 -17%, 64 -16%, 153
+-6% against T-NB3; code 35 (v2's code for 0.05 nit) read 0.0226 at the start of anchor 47, against 0.058 in T-NB3,
+while 36 read 0.054: code 35 has dropped to the step below. In T-NB3, 35-37 were one step. v2's snapping picked
+codes at the low edge of a step, so one code of edge movement drops a level a whole step.
+
+Changes after this run (BevelTipDrip agreed, 2026-11-19): a polish step (one code on each channel alone) and step
+centring (`centre_on_step`); the same centring belongs in how v3's LUT is built. Next: stage 2 in two parts
+(31, 35, 40, 52; then 56, 64, 75, 85), ~25-30 min each.

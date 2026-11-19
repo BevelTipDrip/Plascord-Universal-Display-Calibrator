@@ -417,8 +417,52 @@ def anchor_pass(take, T, start, white, args, log):
                 misses += 1
                 if misses >= 2:
                     break
-    best = min(seen, key=lambda k: search_cost(seen[k], T, white, args.raised_weight))
-    return best, seen[best], len(seen)
+    ck = lambda k: search_cost(seen[k], T, white, args.raised_weight)
+    c = min(seen, key=ck)
+
+    # Polish: one code on each channel alone, around the best, until no neighbour is better (at most 3 rounds).
+    def neighbours(k):
+        return [tuple(min(max(k[i] + (d if i == ch else 0), 0), 1023) for i in range(3))
+                for ch in range(3) for d in (-1, 1)]
+
+    for _ in range(3):
+        for q in neighbours(c):
+            m(q)
+        b = min([c] + neighbours(c), key=ck)
+        if b == c:
+            break
+        c = b
+    for q in neighbours(c):
+        m(q)
+    c = centre_on_step(c, seen, ck, m)
+    return c, seen[c], len(seen)
+
+
+def centre_on_step(c, seen, ck, m):
+    """Move off the edge of a panel step (T-NT2: near black the steps' edges shift by about a code between sessions,
+    so a code at an edge can fall to the next step). For each channel whose -1 neighbour is a jump (>15% in Y) and
+    whose +1 neighbour gives the same light (within 5%), or the reverse, move one code toward the flat side, as long
+    as that costs at most 20% more (+1). The combined move is measured before it is kept."""
+    Yc = seen[c][0]
+    if Yc <= 0:
+        return c
+    jump, flat = math.log(1.15), math.log(1.05)
+    out = list(c)
+    for ch in range(3):
+        lo = tuple(c[i] - (i == ch) for i in range(3))
+        hi = tuple(c[i] + (i == ch) for i in range(3))
+        if lo not in seen or hi not in seen or seen[lo][0] <= 0 or seen[hi][0] <= 0:
+            continue
+        dl, dh = abs(math.log(seen[lo][0] / Yc)), abs(math.log(seen[hi][0] / Yc))
+        if dl > jump and dh < flat and ck(hi) <= 1.2 * ck(c) + 1:
+            out[ch] += 1
+        elif dh > jump and dl < flat and ck(lo) <= 1.2 * ck(c) + 1:
+            out[ch] -= 1
+    out = tuple(out)
+    if out == c:
+        return c
+    m(out)
+    return out if ck(out) <= 1.2 * ck(c) + 1 else c
 
 
 # ---------------------------------------------------------------- patch sources
