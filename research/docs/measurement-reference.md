@@ -29,7 +29,9 @@ symptom or dead end goes in here the same day, in one line with a pointer to the
 2. One change since the last run; say which. Give the run its test ID (`changemap.py test <id>` finds nothing).
 3. Colour pipeline as intended: `python tools/set_hdr_profile.py --show` (HDR profile is the one meant for this
    run); NVIDIA "Override to reference mode" unticked; Windows HDR on (HDR runs) or off (SDR runs).
-4. Display warmed up; OSD preset named in the label; Dark Stabilizer 0.
+4. Display warmed up; OSD preset named in the label; Dark Stabilizer 0. After the monitor lost power, near black runs
+   up to ~20% high for about three hours (T-DRIFT1/2, Q-19): first read the six T-DRIFT codes (36, 42, 43, 50, 64,
+   153) and compare with T-NB3 (within ~3%) before any run that a profile will be built from.
 5. Same patch size (`--area 0.1`), meter and correction as the baseline.
 6. Say in advance what each outcome would mean.
 

@@ -207,3 +207,26 @@ One change since T-NT0's follow-up (23:40): BevelTipDrip switched the HDR profil
 black reads 6-8% lower than with the neutral one 1.5 h earlier, more toward black, so BevelTipDrip's profile
 explanation may hold in part; but it is still 6-12% above the afternoon, so part of the change is not the profile.
 One run cannot separate profile from time: next, the neutral profile again right after, same codes (A/B).
+
+## T-DRIFT2: the same codes with the neutral profile again, ~10 min after T-DRIFT1 (2026-11-19 ~01:30, run by Claude for BevelTipDrip, log `data/nearblack-t-drift2-neutral-profile-2026-11-19.csv`)
+
+One change since T-DRIFT1: BevelTipDrip switched back to the neutral profile (confirmed by `--show`).
+
+| Code | T-NB3 15:55 HDR Cal. | T-NT0 23:40 neutral | T-DRIFT1 01:20 HDR Cal. | T-DRIFT2 01:30 neutral | T-DRIFT2 vs T-NB3 |
+|---|---|---|---|---|---|
+| 36 | 0.0579 | 0.0705 | 0.0650 | 0.0594 | 1.03 |
+| 42 | 0.1051 | 0.1270 | 0.1169 | 0.1065 | 1.01 |
+| 50 | 0.1517 | 0.1774 | 0.1658 | 0.1532 | 1.01 |
+| 64 | 0.2292 | 0.2605 | 0.2462 | 0.2295 | 1.00 |
+| 153 | 1.285 | 1.397 | 1.358 | 1.313 | 1.02 |
+
+Verdict: **time, not the profile** [V]. With the neutral profile the near black is now lower than with the HDR
+Calibration profile 10 minutes earlier, and back within 0-3% of the afternoon baseline. The readings fall with time
+whatever the profile: +12-21% at 23:40 (about an hour after the monitor's power was cut), +6-12% at 01:20, +0-3% at
+01:30. The panel's near black runs high after the power cut and settles back over roughly three hours [I on the
+cause: power-on compensation or a pixel refresh]. The profile's effect, if any, is under the drift (a few %).
+BevelTipDrip's suspicion of the profile is answered: not the main cause.
+
+Consequences: measure only on a settled panel, and check it first: the six T-DRIFT codes against T-NB3 within ~3%
+(measurement-reference.md, "Before every test"). v2 should fit again on a settled panel (T-NT0's mismatch was the
+drift). T-NT1's near-black readings were taken on an unsettled panel.
