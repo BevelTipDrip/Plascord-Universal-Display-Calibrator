@@ -185,9 +185,27 @@ def adapt_reads(Y):
     return 5 if Y < 1 else 4 if Y < 2 else 3 if Y < 5 else 2 if Y < 10 else 1
 
 
-def measure(display_type, min_reads, ccmx=None):
+def readings_agree(vals, tol):
+    """True when the readings' Y spread is within tol of their mean (at least 0.0003 cd/m2, the meter's noise near
+    black) and their xy spread within 0.003."""
+    ys = [v[0] for v in vals]
+    mean = sum(ys) / len(ys)
+    if max(ys) - min(ys) > max(tol * mean, 0.0003):
+        return False
+    lit = [v for v in vals if v[0] > 0]
+    return all(max(v[i] for v in lit) - min(v[i] for v in lit) <= 0.003 for i in (1, 2)) if lit else True
+
+
+def measure(display_type, min_reads, ccmx=None, agree=0.0):
+    """Average of HCFR's low-light number of readings; with `agree` > 0 it stops early, from the second reading on,
+    once the readings agree (readings_agree)."""
     first = read_meter(display_type, ccmx)
-    vals = [first] + [read_meter(display_type, ccmx) for _ in range(max(min_reads, adapt_reads(first[0])) - 1)]
+    want = max(min_reads, adapt_reads(first[0]))
+    vals = [first]
+    while len(vals) < want:
+        vals.append(read_meter(display_type, ccmx))
+        if agree > 0 and len(vals) >= max(2, min_reads) and readings_agree(vals, agree):
+            break
     n = len(vals)
     Y = sum(v[0] for v in vals) / n
     # Chromaticity from the readings that had light (black reads 0,0).
@@ -418,12 +436,29 @@ def data_path(outdir, label, valid):
     return path
 
 
+CSV_HEADER = ["run", "mode", "requested", "code", "target_cdm2", "Y_cdm2", "Y_sd", "x", "y", "reads", "r", "g", "b"]
+
+
 def run(args, src):
     rows, ramp, mon, saved_vcp = [], None, None, {}
     os.makedirs(args.outdir, exist_ok=True)
     hdr = args.mode == "hdr"
     ref_level = 100 if hdr else 255
     valid = True
+    csv_path = None
+
+    def save(extra=()):
+        """Rewrite the CSV with every row so far (after each patch), so a stopped run keeps its data."""
+        nonlocal csv_path
+        if not rows and not extra:
+            return
+        if csv_path is None:
+            csv_path = data_path(args.outdir, args.label or args.mode, True)
+        with open(csv_path, "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(CSV_HEADER)
+            w.writerows(list(rows) + list(extra))
+
     try:
         if not hdr:
             ramp = GammaRamp()
@@ -434,7 +469,7 @@ def run(args, src):
                 raise KeyboardInterrupt
             src.show(level)
             time.sleep(args.settle if settle is None else settle)
-            return measure(args.display_type, args.reads, args.ccmx)
+            return measure(args.display_type, args.reads, args.ccmx, args.agree)
 
         # Pre-flight: the meter must see a plausible reference before the sweep (screen on, meter on the patch).
         ref0 = take(ref_level, settle=3.0)[0]
@@ -456,31 +491,42 @@ def run(args, src):
                 res[lvl] = take(lvl)
                 name = f"code {lvl[1]}" if isinstance(lvl, tuple) else f"{lvl:g}"
                 print(f"  {name:>9}: {res[lvl][0]:.5f} cd/m2  ({res[lvl][4]} reads)", flush=True)
+                save(rows_for(tag, res))
             report(tag, res)
 
+        def rows_for(tag, res):
+            """CSV rows for a sweep's readings: HDR targets are the exact luminance of the code sent; SDR targets
+            follow --gamma from the measured white (255)."""
+            out = []
+            white = res[255][0] if not hdr and 255 in res else float("nan")
+            for lvl, (Y, x, y, sd, n) in res.items():
+                if not hdr:
+                    out.append([tag, "sdr", lvl, lvl, white * (lvl / 255.0) ** args.gamma, Y, sd, x, y, n, lvl, lvl, lvl])
+                    continue
+                if isinstance(lvl, tuple):
+                    code = lvl[1]
+                    tgt = nits_from_pq(code / 1023)
+                    lvl = round(tgt, 5)
+                else:
+                    code, tgt = pq10(lvl)
+                out.append([tag, "hdr", lvl, code, tgt, Y, sd, x, y, n, code, code, code])
+            return out
+
         def report(tag, res):
+            new = rows_for(tag, res)
+            rows.extend(new)
+            save()
             if hdr:
                 print(f"\n[{tag}]  HDR10 PQ, absolute targets")
                 print(f"{'asked':>7} {'code':>5} {'target':>9} {'measured':>9} {'ratio':>6} {'sd':>7} {'x':>6} {'y':>6}")
-                for lvl, (Y, x, y, sd, n) in res.items():
-                    if isinstance(lvl, tuple):
-                        code = lvl[1]
-                        tgt = nits_from_pq(code / 1023)
-                        lvl = round(tgt, 5)
-                    else:
-                        code, tgt = pq10(lvl)
-                    ratio = Y / tgt if tgt > 0 else float("nan")
-                    print(f"{lvl:>7g} {code:>5} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
-                    rows.append([tag, "hdr", lvl, code, tgt, Y, sd, x, y, n, code, code, code])
             else:
                 white = res[255][0] if 255 in res else float("nan")
                 print(f"\n[{tag}]  SDR, gamma {args.gamma} target from measured white {white:.2f} cd/m2")
                 print(f"{'code':>5} {'target':>9} {'measured':>9} {'ratio':>6} {'sd':>7} {'x':>6} {'y':>6}")
-                for lvl, (Y, x, y, sd, n) in res.items():
-                    tgt = white * (lvl / 255.0) ** args.gamma
-                    ratio = Y / tgt if tgt > 0 else float("nan")
-                    print(f"{lvl:>5} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
-                    rows.append([tag, "sdr", lvl, lvl, tgt, Y, sd, x, y, n, lvl, lvl, lvl])
+            for _, _, lvl, code, tgt, Y, sd, x, y, *_ in new:
+                ratio = Y / tgt if tgt > 0 else float("nan")
+                first = f"{lvl:>7g} {code:>5}" if hdr else f"{code:>5}"
+                print(f"{first} {tgt:>9.5f} {Y:>9.5f} {ratio:>6.2f} {sd:>7.5f} {x:>6.4f} {y:>6.4f}")
 
         if args.search:
             if not hdr:
@@ -509,11 +555,13 @@ def run(args, src):
                     print(f"  in {code:>4}  rgb {p[0]:>4} {p[1]:>4} {p[2]:>4}: Y {Y:.5f} ({Y / T:.2f}x)  "
                           f"xy {x:.4f}/{y:.4f}  duv {duv(x, y, white):.4f}", flush=True)
                     rows.append([f"search_{code}", "hdr", code, code, T, Y, sd, x, y, n] + list(p))
+                    save()
 
                 best, res, count = rgb_search(take, T, start, white, args, log)
                 since_ref += count
                 Y, x, y, sd, n = res
                 rows.append(["best", "hdr", code, code, T, Y, sd, x, y, n] + list(best))
+                save()
                 summary.append((code, T, best, Y, x, y))
             print(f"\n[search]  best per input code (target D65 {white[0]:.4f}/{white[1]:.4f})")
             print(f"{'in':>5} {'target':>9} {'r':>5} {'g':>5} {'b':>5} {'measured':>9} {'ratio':>6} {'x':>6} {'y':>6} "
@@ -577,12 +625,11 @@ def run(args, src):
         if ramp is not None:
             ramp.restore()
         if rows:
-            csv_path = data_path(args.outdir, args.label or args.mode, valid)
-            with open(csv_path, "w", newline="") as f:
-                w = csv.writer(f)
-                w.writerow(["run", "mode", "requested", "code", "target_cdm2", "Y_cdm2", "Y_sd", "x", "y", "reads",
-                            "r", "g", "b"])
-                w.writerows(rows)
+            save()
+            if not valid:
+                bad = data_path(args.outdir, args.label or args.mode, False)
+                os.replace(csv_path, bad)
+                csv_path = bad
             print(f"\nSaved {csv_path}")
         src.close()
 
@@ -603,6 +650,9 @@ def main():
     ap.add_argument("--gamma", type=float, default=2.2, help="SDR target gamma (default 2.2)")
     ap.add_argument("--reads", type=int, default=1,
                     help="minimum readings per level; HCFR's Adapt rule adds more below 10 cd/m2 (up to 5)")
+    ap.add_argument("--agree", type=float, default=0.01,
+                    help="stop a level's readings early, from the second on, once they agree within this share of "
+                         "Y (and 0.003 in xy); 0 = always take HCFR's full count (default 0.01)")
     ap.add_argument("--settle", type=float, default=0.5, help="seconds between patch and reading")
     ap.add_argument("--area", type=float, default=0.1, help="patch area as share of the screen (HCFR: 0.1)")
     ap.add_argument("--display-type", default="o", help="spotread -y display type (default 'o' = OLED)")

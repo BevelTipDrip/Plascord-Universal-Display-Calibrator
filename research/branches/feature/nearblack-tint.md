@@ -8,7 +8,7 @@ goal: Bring the grey scale to D65 at every level (whole-scale magenta lean and t
 areas: patchgen, measurement, profiles
 files: tools/hdrgen/hdr10_patchgen.cpp, tools/nearblack_probe.py, tools/build_mhc2.py, research/docs/plan-nearblack-tint.md, research/docs/data/*, profiles/*
 interfaces: generator stdin protocol (adds an RGB patch command; existing commands unchanged), probe CSV columns (adds per-channel codes), build_mhc2.py command line (per-channel LUTs)
-work_queue: Q-1
+work_queue: Q-1, Q-9
 docs: plan-nearblack-tint.md
 cards:
 ---

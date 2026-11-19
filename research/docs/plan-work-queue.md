@@ -38,6 +38,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
+| Q-9 | chore | Probe speed: stop at 2 readings when they agree; CSV written per patch | BevelTipDrip | feature/nearblack-tint | built | `--agree` (fake meter: 100 -> 49 readings for 26 levels); one spotread session dropped (keyboard-only input, ~1.3 s saved of 7-15 s). Not run on the meter yet. [nearblack-probe](../changes/measurement/nearblack-probe.md) |
 | Q-1 | feature | Grey scale to D65 at every level: whole-scale magenta lean plus the blue/purple shift near black | BevelTipDrip | feature/nearblack-tint | built (search, not run) | Per-channel LUTs solved by a measured search; run needs the preset choice and a go. [plan-nearblack-tint.md](plan-nearblack-tint.md) |
 
 ## Next
@@ -52,7 +53,6 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 | Q-6 | research | DDC/CI black level (VCP 6C/6E/70) sweep | | | open | Probe `--ddc-sweep`; run with the uncorrected HDR profile so the LUT does not mask it. [measurement-reference.md](measurement-reference.md) |
 | Q-7 | research | SDR run: Windows HDR off, Creator mode gamma 2.2 | | | open | Probe `--mode sdr`. [measurement-reference.md](measurement-reference.md) |
 | Q-8 | feature | Optional sRGB-to-gamma-2.2 profile for SDR content in Windows HDR | | | open | Windows maps SDR into HDR with the piecewise sRGB curve; the same LUT changes HDR content in that range too. [profiles-reference.md](profiles-reference.md) |
-| Q-9 | chore | Probe speed: early stop when readings agree, one persistent spotread session, CSV written per patch | | | open | Near-black readings repeat closely; most patches need 2 readings, not 5. [measurement-reference.md](measurement-reference.md) |
 | Q-10 | bug | `set_hdr_profile.py --set` does not change the default when the profile is already associated | | | confirmed | Needs remove + add, or ColorProfileSetDisplayDefaultAssociation. [set-hdr-profile](../changes/profiles/set-hdr-profile.md) |
 | Q-11 | bug | Windows loses the monitor from colour management (Settings and mscms) | | | confirmed | Twice on 2026-11-18: no monitor under `\\.\DISPLAY1` in EnumDisplayDevices while PnP, WMI and DisplayConfig still have it; Settings crashes on Add profile. [profiles-reference.md](profiles-reference.md#4-symptom---first-place-to-look) |
 
