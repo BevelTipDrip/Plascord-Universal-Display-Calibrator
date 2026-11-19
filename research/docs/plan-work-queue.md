@@ -44,7 +44,6 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 
 | ID | Kind | Item | Owner | Branch | State | Details |
 |---|---|---|---|---|---|---|
-| Q-2 | feature | Peak 1000: dense sweep, then a v2 (snapped) profile | | | open | v1 is unsnapped and built from the 26-level run, 2 points in the 0.01-0.08 nit jump (T-NB2). [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-3 | feature | Re-apply the HDR profile after waking from standby | | | open | ledoge's fix: a scheduled task on System log, Power-Troubleshooter, Event ID 1. [profiles-reference.md](profiles-reference.md) |
 | Q-4 | research | Check the profile reaches fullscreen games (independent flip) | | | run | Reaches the MediEvil port's swapchain (T-MED2); flip mode there unknown; confirm in a known fullscreen game. [plan-hdr-nearblack-lut.md](plan-hdr-nearblack-lut.md) |
 | Q-5 | research | Visual check of codes 15, 22, 27, 31, 37 (below the meter's floor) against black | | | open | Decides how the LUT treats inputs under ~0.015 nit. [measurement-reference.md](measurement-reference.md) |
@@ -53,7 +52,7 @@ Compact view: `python research/tools/changemap.py queue`; one item and everythin
 | Q-8 | feature | Optional sRGB-to-gamma-2.2 profile for SDR content in Windows HDR | | | open | Windows maps SDR into HDR with the piecewise sRGB curve; the same LUT changes HDR content in that range too. [profiles-reference.md](profiles-reference.md) |
 | Q-9 | chore | Probe speed: early stop when readings agree, one persistent spotread session, CSV written per patch | | | open | Near-black readings repeat closely; most patches need 2 readings, not 5. [measurement-reference.md](measurement-reference.md) |
 | Q-10 | bug | `set_hdr_profile.py --set` does not change the default when the profile is already associated | | | confirmed | Needs remove + add, or ColorProfileSetDisplayDefaultAssociation. [set-hdr-profile](../changes/profiles/set-hdr-profile.md) |
-| Q-11 | bug | Windows can drop the monitor from colour management after a restart | | | found | Seen 2026-11-18: no monitor child under `\\.\DISPLAY1`; Device Manager > Scan for hardware changes restored it. Automate a check. [profiles-reference.md](profiles-reference.md) |
+| Q-11 | bug | Windows loses the monitor from colour management (Settings and mscms) | | | confirmed | Twice on 2026-11-18: no monitor under `\\.\DISPLAY1` in EnumDisplayDevices while PnP, WMI and DisplayConfig still have it; Settings crashes on Add profile. [profiles-reference.md](profiles-reference.md#4-symptom---first-place-to-look) |
 
 ## Later
 

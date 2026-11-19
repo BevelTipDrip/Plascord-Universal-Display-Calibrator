@@ -108,6 +108,8 @@ Alternatives considered:
   "saturation" so I don't believe we're going to get the results we need without effecting other areas, because
   it's not linear"). Earlier the same day: "I am fine with 450 nits, this monitor can't do well with 1000 anyway".
   The probe's `--ddc-steps` stays for later tests (Q-6).
+- Calibrate **True Black 400**; Peak 1000 dropped for now (BevelTipDrip, 2026-11-18: "true black 400 is the one to
+  use" and "we will drop it for now at least, the correct mode for the monitor is a well calibrated HDR400").
 - Target **D65 (0.3127/0.3290) at every level** of the grey scale, not the panel's own grey (BevelTipDrip,
   2026-11-18: "we should probably fix that and target d65").
 - A little luminance error near black is acceptable to get the colour right; prefer a step slightly too dark over
@@ -119,5 +121,4 @@ Alternatives considered:
 ## Open questions
 
 - The strength of the crushed-over-raised weighting (BevelTipDrip).
-- Which preset to calibrate first (True Black 400, with its dense data and v2 profile, or Custom Color HDR), and is
-  Peak 1000 (Q-2) still wanted (BevelTipDrip)?
+- None on scope (see Decisions).

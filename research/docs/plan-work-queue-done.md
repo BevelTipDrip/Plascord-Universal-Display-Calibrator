@@ -6,3 +6,4 @@ A `done` row names its commit or PR and who verified it; a `dropped` row says wh
 
 | ID | Kind | Item | State | Result | Commit / PR | Verified by | Date |
 |---|---|---|---|---|---|---|---|
+| Q-2 | feature | Peak 1000: dense sweep, then a v2 (snapped) profile | dropped | Dropped for now: True Black 400 is the mode to calibrate (BevelTipDrip, 2026-11-18: "we will drop it for now at least, the correct mode for the monitor is a well calibrated HDR400") | | | 2026-11-18 |
