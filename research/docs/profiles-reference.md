@@ -93,3 +93,12 @@ installer was unpacked or run). Found, not yet confirmed by a test:
   2026-10-09, 2026-10-11 and 2026-11-15, the last two aborted (0x643). Leftovers: `C:\ProgramData\Alienware`
   (575 MB of cached installers, among them `AWDisplayInstaller.exe`), `C:\ProgramData\Dell` (logs),
   `DellInstrumentation.sys` staged in the driver store. Q-21. No action: BevelTipDrip disabled the installation on purpose (2026-11-19).
+
+**Q-11 again, 2026-11-19 evening** (reported by BevelTipDrip: "it looks like the HDR profile bug returned"). The
+active monitor is the same instance as before, `DISPLAY\DELA246&14b0e70&0&UID4353` (slot `0000`, our profiles);
+UID0 is Disconnected. So this is not Q-22. `EnumDisplayDevices` lists `\.\DISPLAY17` (RTX 4090, attached) with
+no monitor under it, and `set_hdr_profile.py --show` gets 0x80070057: the Q-11 symptom. DDC/CI (dxva2) still reaches
+the monitor on `\.\DISPLAY17`. The System log has no PnP add or remove for the monitor. It has only display power
+transitions (Kernel-Power 566) at 15:08-15:09 and 18:38-18:51; the latter match the DDC wake/sleep tests on
+feature/ddc-module. Not known which transition, if any, dropped it. Candidate: display power cycles, which tie
+in with Q-3.
