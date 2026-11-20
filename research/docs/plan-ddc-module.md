@@ -543,3 +543,21 @@ settles on.
   left asleep.
 
 **Next:** the preset comparison (T-DDC2b). It needs BevelTipDrip at the OSD. Run each scan with `--keep-awake`.
+
+## T-DDC2 rescan after colour management was restored (2026-11-19, evening)
+
+BevelTipDrip: "Let's rescan ddc now that the color profile is re-enabled". Colour management had dropped out (Q-11)
+and was restored with CRU `restart64.exe`. Run with `--keep-awake` but without `--sleep-after`, because a display
+power cycle is a Q-11 suspect, tested later (BevelTipDrip: "we can leave it for later"). Read only. Data:
+`data/ddc-t-ddc2-scan-profile-restored-2026-11-19.*`. Afterwards the monitor was still listed under its output.
+
+Compared with the held awake scan earlier the same evening, 5 codes differ:
+- **C0 display usage time: 2359 -> 2360.** One step in about an hour, which fits a counter of hours of use [I].
+- **F4 / F5: 16 -> 48** during the scan; then 16 on three later reads. This fits T-DDC2c: the first read after a
+  pause reads 48.
+- **EC: no reply this time.** It read 7936 before; this time the read failed with 0xC0262589 (invalid command field),
+  so it shows as "in caps but no reply". A one-off link error [I]: read EC again before reading anything into it.
+- **96:** a different error text for a code that does not reply; not a change.
+
+Everything else is identical: D6 1, E2 58, F2 585, gains, black levels, the same 19 hidden codes. As expected, the
+Windows colour profile does not show over DDC/CI: the profile lives in the GPU, not in the monitor.

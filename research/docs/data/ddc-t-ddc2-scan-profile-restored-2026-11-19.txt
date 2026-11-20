@@ -1,0 +1,80 @@
+VCP D6 power mode                     1 of 255  (on)
+VCP E2 preset mode (report)           58 of 255  (DisplayHDR)
+VCP F2 HDR state (report)             585 of 65280
+VCP  name                                       reply type          current     max caps  note
+02   new control value                          yes   momentary           2       2 yes
+03   soft controls                              yes   set parameter       2     255 no    hidden: replies, not in caps
+04   restore factory defaults                   yes   momentary           0     255 yes   write-only in MCCS
+05   restore factory brightness/contrast        yes   momentary           0       1 yes   write-only in MCCS
+06   restore factory geometry                   yes   momentary           0     255 no    hidden: replies, not in caps; write-only in MCCS
+08   restore factory colour                     yes   momentary           0     255 yes   write-only in MCCS
+0B   colour temperature increment               yes   momentary           0   24028 no    hidden: replies, not in caps
+0C   colour temperature request                 yes   momentary           2     255 no    hidden: replies, not in caps
+0E   clock                                      yes   set parameter      50     100 no    hidden: replies, not in caps
+10   brightness                                 yes   set parameter      35     100 yes
+12   contrast                                   yes   set parameter      75     100 yes
+14   colour preset                              yes   set parameter       5      12 yes
+16   red gain                                   yes   set parameter     100     100 yes
+18   green gain                                 yes   set parameter     100     100 yes
+1A   blue gain                                  yes   set parameter     100     100 yes
+1E   auto setup                                 yes   momentary           0       2 no    hidden: replies, not in caps
+20   horizontal position (phase)                yes   set parameter       0     100 no    hidden: replies, not in caps
+30   vertical position (phase)                  yes   set parameter       0     100 no    hidden: replies, not in caps
+3E   clock phase                                yes   set parameter      50     100 no    hidden: replies, not in caps
+52   active control                             yes   momentary          16     255 yes
+60   input source                               yes   set parameter    3855      14 yes
+62   audio speaker volume                       yes   set parameter      50     100 no    hidden: replies, not in caps
+6C   red black level                            yes   set parameter      50     255 no    hidden: replies, not in caps
+6E   green black level                          yes   set parameter      50     255 no    hidden: replies, not in caps
+70   blue black level                           yes   set parameter      50     255 no    hidden: replies, not in caps
+87   sharpness                                  yes   set parameter      50     100 yes
+A8   not defined in MCCS 2.2a                   yes   momentary           0       3 no    hidden: replies, not in caps
+AC   horizontal frequency                       yes   momentary       47112       8 yes
+AE   vertical frequency                         yes   momentary       23524       0 yes
+B2   flat panel sub-pixel layout                yes   momentary           1       8 yes
+B4   source timing mode                         yes   momentary           1       2 no    hidden: replies, not in caps
+B6   display technology type                    yes   momentary           6       5 yes
+C0   display usage time                         yes   momentary        2360   65535 no    hidden: replies, not in caps
+C6   application enable key                     yes   momentary       17868   65535 yes
+C8   display controller type                    yes   momentary       22021       0 yes
+C9   display firmware level                     yes   momentary       16656   65535 yes
+CA   OSD / button control                       yes   set parameter       0     255 yes
+CC   OSD language                               yes   set parameter       2      14 yes
+D6   power mode                                 yes   momentary           1     255 yes
+DC   display mode                               yes   set parameter       0     255 yes
+DE   scratch pad                                yes   momentary           0       0 no    hidden: replies, not in caps; 0 of 0: may be unsupported
+DF   VCP version                                yes   momentary         513     255 yes
+E0   manufacturer E0                            yes   set parameter       0       1 yes
+E1   Dell power (inverted)                      yes   set parameter       0       1 yes
+E2   preset mode (report)                       yes   momentary          58     255 yes
+E3   manufacturer E3                            yes   set parameter       0       1 yes
+E4   manufacturer E4                            yes   set parameter       0       1 yes
+E5   manufacturer E5                            yes   set parameter       0       2 yes
+E6   manufacturer specific                      yes   set parameter       1       1 no    hidden: replies, not in caps
+E8   PiP/PbP secondary input                    yes   set parameter      17   65535 yes
+E9   PiP/PbP mode                               yes   set parameter       0     255 yes
+EA   manufacturer EA                            yes   set parameter   65025   65025 yes
+EC   manufacturer EC                            no                                  yes   in caps, no reply
+F0   preset select (part)                       yes   set parameter      13     255 yes
+F1   manufacturer F1                            yes   set parameter     283     283 yes
+F2   HDR state (report)                         yes   set parameter     585   65280 yes
+F4   indirect register (gaming settings)        yes   set parameter      48       1 yes
+F5   manufacturer F5                            yes   set parameter      48       1 yes
+FA   manufacturer specific                      yes   momentary           0   65535 no    hidden: replies, not in caps
+FD   manufacturer FD                            yes   set parameter      98   65535 yes
+FE   manufacturer FE                            yes   set parameter     159   65535 yes
+
+Alienware AW3225QF(DisplayPort HDR): 256 codes read, 60 replied; capabilities: 42 codes listed (model AW3225QF, MCCS 2.1)
+Hidden-setting candidates (reply, not in caps): 03 06 0B 0C 0E 1E 20 30 3E 62 6C 6E 70 A8 B4 C0 DE E6 FA
+In caps but no reply: EC
+Display module: AW3225QF (python -m ddc display --display aw3225qf)
+CSV: ../research/docs/data/ddc-t-ddc2-scan-profile-restored-2026-11-19.csv
+JSON: ../research/docs/data/ddc-t-ddc2-scan-profile-restored-2026-11-19.json
+display on (VCP D6 = 1) after 0.0 s; settling 5 s
+scan exit 0
+VCP F4 indirect register (gaming settings) 16 of 1
+VCP F5 manufacturer F5                16 of 1
+VCP F4 indirect register (gaming settings) 16 of 1
+VCP F5 manufacturer F5                16 of 1
+VCP F4 indirect register (gaming settings) 16 of 1
+VCP F5 manufacturer F5                16 of 1

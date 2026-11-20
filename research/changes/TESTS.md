@@ -10,6 +10,7 @@ Before using a new ID: `changemap.py test <id>` must find nothing.
 | T-DDC2 | [plan-ddc-module.md:354](../docs/plan-ddc-module.md#planned-t-ddc1-and-t-ddc2-read-only-checks-for-beveltipdrip-not-run) | Planned: T-DDC1 and T-DDC2, read-only checks for BevelTipDrip (not run) |  |
 | T-DDC2 | [plan-ddc-module.md:425](../docs/plan-ddc-module.md#t-ddc1-and-t-ddc2-run-with-the-monitor-asleep-2026-11-19) | T-DDC1 and T-DDC2 run with the monitor asleep (2026-11-19) |  |
 | T-DDC2 | [plan-ddc-module.md:462](../docs/plan-ddc-module.md#t-ddc2-run-with-the-monitor-awake-2026-11-19) | T-DDC2 run with the monitor awake (2026-11-19) |  |
+| T-DDC2 | [plan-ddc-module.md:547](../docs/plan-ddc-module.md#t-ddc2-rescan-after-colour-management-was-restored-2026-11-19-evening) | T-DDC2 rescan after colour management was restored (2026-11-19, evening) |  |
 | T-DDC2c | [plan-ddc-module.md:494](../docs/plan-ddc-module.md#t-ddc2c-what-moves-f4-and---keep-awake-2026-11-19) | T-DDC2c: what moves F4, and `--keep-awake` (2026-11-19) |  |
 | T-DDC2c | [plan-ddc-module.md:499](../docs/plan-ddc-module.md#t-ddc2c-what-moves-f4-and---keep-awake-2026-11-19) | T-DDC2c, F4 hunt** (`data/ddc-t-ddc2c-f4-hunt-2026-11-19.csv`; every read is log |  |
 | T-DRIFT1 | [plan-nearblack-tint.md:209](../docs/plan-nearblack-tint.md#t-drift1-the-t-nt0-codes-with-the-hdr-calibration-profile-2026-11-19-0120-run-by-claude-for-beveltipdrip-log-datanearblack-t-drift1-hdrcal-profile-2026-11-19csv) | T-DRIFT1: the T-NT0 codes with the HDR Calibration profile (2026-11-19 ~01:20, r |  |
