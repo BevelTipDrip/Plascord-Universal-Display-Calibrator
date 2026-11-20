@@ -6,7 +6,7 @@ status: active
 default: n/a
 origin: ours
 owner: BevelTipDrip
-commits: c491027, a63d1d1
+commits: c491027, a63d1d1, 2d514b3, cbf8653
 prs:
 queue: Q-2, Q-1
 files: tools/build_mhc2.py, tools/tests/test_build_mhc2.py, tools/tests/__init__.py
