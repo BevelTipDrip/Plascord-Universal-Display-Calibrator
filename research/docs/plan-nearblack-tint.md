@@ -339,7 +339,9 @@ programme). That costs one anchor: 52 goes from 37/36/32 (dE ITP 2.7) to 34/37/3
   actually sends and stores every output as code + 0.25, so it does not carry the landmine.
 
 Profiles: `profiles/AW3225QF TB400 grey D65 v3 provisional.icc`, with the HDR Calibration matrix (its saturation),
-and `... (neutral).icc`, identity matrix. Both send the same codes. Not installed; installing needs a go.
+and `... (neutral).icc`, identity matrix. Both send the same codes. The saturation version was installed and set
+as the HDR default on 2026-11-19 (BevelTipDrip: "Yes, you can install it and set it as the default.");
+`set_hdr_profile.py --show` confirms it.
 
 **Next:**
 1. BevelTipDrip looks at greys on screen. Installing needs a go.
