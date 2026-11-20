@@ -343,7 +343,12 @@ and `... (neutral).icc`, identity matrix. Both send the same codes. The saturati
 as the HDR default on 2026-11-19 (BevelTipDrip: "Yes, you can install it and set it as the default.");
 `set_hdr_profile.py --show` confirms it.
 
+**On-screen check, verified better than v2 (BevelTipDrip, 2026-11-19, grey ramp):** "the range looks quite a bit
+better, when looking at a grey ramp, I can see some levels still lean a little more purple, some lean slightly
+green, but it's significantly better than the baseline." Leftover tint on some levels: purple on some, green on
+others. Which levels is not recorded yet; T-NT4 measures it.
+
 **Next:**
-1. BevelTipDrip looks at greys on screen. Installing needs a go.
+1. Done: on-screen check (above).
 2. A verify run, T-NT4: the anchor inputs plus the interpolated ranges, with v3 as the HDR profile.
 3. The missing anchors, then a rebuild.
