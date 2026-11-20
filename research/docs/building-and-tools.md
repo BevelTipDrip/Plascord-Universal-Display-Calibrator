@@ -84,6 +84,7 @@ request, Python 3.12 on Linux). From the repo root:
 
 ```
 python -m unittest discover -s tools/ddc/tests -t tools          # DDC/CI package: fake backend only
+python -m unittest discover -s tools/tests -t tools              # build_mhc2.py (anchors, LUT encoding, MHC2 tag)
 ```
 
 The Windows-only check that `Dxva2Backend` refuses to start off Windows is skipped on Windows (it would enumerate

@@ -8,9 +8,9 @@ origin: ours
 owner: BevelTipDrip
 commits: c491027, a63d1d1
 prs:
-queue: Q-2
-files: tools/build_mhc2.py
-symbols: load_response, Response, build_lut, smoothstep, read_icc, mhc2, write_icc, mluc, DEFAULT_BASE, IDENTITY_MATRIX
+queue: Q-2, Q-1
+files: tools/build_mhc2.py, tools/tests/test_build_mhc2.py, tools/tests/__init__.py
+symbols: load_response, Response, build_lut, smoothstep, read_icc, mhc2, write_icc, mluc, DEFAULT_BASE, IDENTITY_MATRIX, read_mhc2_luts, ictcp, delta_e_itp, anchor_score, load_anchor_candidates, pick_anchors, sent_codes, anchor_output_codes, codes_to_lut, DEFAULT_START
 switches:
 tests: T-NB3, T-NB9
 docs: plan-hdr-nearblack-lut.md#design, profiles-reference.md
@@ -32,9 +32,23 @@ optionally the peak and `lumi`, and recomputes the profile ID. `--neutral` write
 the base's (the Windows HDR Calibration matrix carries that app's saturation boost); `--identity-lut` (no `--csv`)
 writes Windows' own 2-entry identity LUT. Both together: a profile that changes nothing, for measuring.
 
+`--anchors <CSV...>` (Q-1) builds three per-channel LUTs instead, for a grey scale at D65:
+- it reads the `anchor_<code>` rows of `nearblack_probe.py --anchors` runs and picks one measured code triple per
+  anchor, by Delta E ITP against D65 at the PQ target, too bright x`--raised-weight`;
+- by default it picks the best set that keeps each channel non-decreasing; `--allow-non-monotone` picks each
+  anchor's best alone;
+- it starts from the codes `--start-profile` (v2) sends: an input on an anchor's start step sends that anchor's
+  triple; between anchors, per-channel offsets are interpolated in log luminance; above the last anchor, its
+  offsets are held; below the first, the start's codes capped at the first anchor's;
+- every output is stored as code + 0.25.
+
 ## Invariants
 
-- The LUT is monotone non-decreasing and starts at 0.
+- The LUT is monotone non-decreasing and starts at 0 (with `--anchors`: per channel, unless
+  `--allow-non-monotone`).
+- `--anchors`: every anchor input sends exactly its picked triple (read back after `sent_codes`); every stored
+  value is `codes_to_lut` (code + 0.25, 0 and 1.0 at the ends); `mhc2()` with one list writes the same bytes as
+  with that list three times.
 - Identity from `--blend-end` up.
 - The base profile's min luminance is kept; its matrix too, unless `--neutral` (identity).
 - Without `--neutral` and `--identity-lut` the output is byte-identical to before these options (checked
@@ -50,6 +64,8 @@ writes Windows' own 2-entry identity LUT. Both together: a profile that changes 
 ## Evidence
 
 - True Black 400 v2 built from T-NB3: T-NB9 within 7% of target from 0.075 to 20 nits.
+- 2026-11-19: with `--anchors` added, v2 rebuilt from T-NB3 and the neutral profile rebuilt are byte-identical to the
+  committed files. 15 unit tests (`tools/tests/test_build_mhc2.py`) pass. v3 provisional built, not run.
 
 ## History and pitfalls
 

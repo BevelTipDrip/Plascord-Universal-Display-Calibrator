@@ -21,7 +21,9 @@ When an item is acted on, do not delete it: add its outcome in bold with the sta
 - **The identity part of a corrected LUT stores exactly `i/1023`** (`build_lut` above `--blend-end`), and the
   pipeline truncates LUT output (T-NB7). If the s15.16 value lands a hair under, that input goes out one code low
   (about 1% above 30 nits). Not seen clearly in T-NB9 (30-100 nits matched the uncorrected panel within 2%) [I].
-  Storing `(i + 0.25)/1023` as `snap_lut` does would rule it out. Cards: mhc2-lut, lut-snap.
+  Storing `(i + 0.25)/1023` as `snap_lut` does would rule it out. Cards: mhc2-lut, lut-snap. **Confirmed
+  2026-11-19:** v2's LUT, read back, sends 401 for 402 and 593 for 594 (one code low across its identity range).
+  `--anchors` profiles (v3) store every code as code + 0.25 and are built on the codes v2 actually sends.
 - **`Response.__call__` clamps outside the measured codes** (returns the end values), so `snap_lut` compares
   against flat light there. Harmless while snapping stops above `--blend-start`; a trap if that range grows.
   Cards: mhc2-lut, lut-snap.

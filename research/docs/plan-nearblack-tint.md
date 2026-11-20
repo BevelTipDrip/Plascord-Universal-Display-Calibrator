@@ -101,7 +101,7 @@ and then interpolate the color adjustment for the in-between values". Built as `
 | Stage | What | Switch | Test | State |
 |---|---|---|---|---|
 | NT1 | Generator `C` command; probe `--search`; search run in the chosen preset with an identity profile | n/a | T-NT1 | built (checked in simulation), not run |
-| NT2 | Per-channel LUTs from the search in `build_mhc2.py`; profile v3; verify run; on-screen check | new option, default off | T-NT2 | not started |
+| NT2 | Per-channel LUTs from the anchors in `build_mhc2.py --anchors`; profile v3; verify run; on-screen check | new option, default off | T-NT4 | built: v3 provisional from 7 of 16 anchors (2026-11-19); not run |
 | NT3 | The other preset(s), if wanted | n/a | | not started |
 
 ## Risks
@@ -298,3 +298,50 @@ genuinely better neighbour.
   All readings are kept, so the choice can be re-weighed without measuring again.
 - BevelTipDrip watched the patches and saw it "eventually reach a patch that's quite close to the correct shade of
   grey".
+
+## v3 provisional: per-channel LUTs from 7 anchors (2026-11-19, built, not run)
+
+BevelTipDrip: "Let's do a provisional V3". Built with `build_mhc2.py --anchors` from T-NT2 and T-NT3 (anchors 31,
+35, 40, 47, 52, 153, 402); 9 anchors are not measured (56, 64, 75, 85, 120, 218, 307, 520, 594).
+
+**Pick rule** (BevelTipDrip, 2026-11-19: "let's use that as the rule."): at each anchor, the measured code triple
+with the lowest Delta E ITP (ITU-R BT.2124: ICtCp, absolute luminance, PQ; 1 is about one just-noticeable
+difference) against D65 at the PQ target, with the luminance part counted double when too bright (crush before
+raise). It replaces the probe's `search_cost` pick: at 31 the current pick scored dE ITP 2.9 (colour 1.8,
+luminance 2.3). The darker "neutral" point 31/33/28 scored 3.8: colour only 0.4, but 3.8 from its 32% shortfall.
+The uncorrected panel near black scores 13-18, and v2 7-12 at these inputs.
+
+**Non-decreasing per channel (my default, not yet confirmed by BevelTipDrip).** The independent picks would make a
+channel's code drop between anchors: green 37 at 40, then 36 at 47; blue 34 at 47, then 32 at 52. The builder's
+LUTs have always been non-decreasing (card mhc2-lut), and it is not known whether Windows accepts a LUT that steps
+down. So the default picks the best set of measured triples that keeps every channel non-decreasing (a dynamic
+programme). That costs one anchor: 52 goes from 37/36/32 (dE ITP 2.7) to 34/37/34 (6.8); 40 changes by 0.1.
+`--allow-non-monotone` builds the independent picks.
+
+| In | Target (nit) | v2 sends | v3 sends | Y / target | dE ITP (v2 at that input) |
+|---|---|---|---|---|---|
+| 31 | 0.020 | 31 | 32/34/29 | 0.87x | 2.7 (7.2) |
+| 35 | 0.026 | 32 | 32/35/29 | 0.69x | 4.6 (9.1) |
+| 40 | 0.035 | 34 | 34/36/29 | 1.17x | 4.3 (10.4) |
+| 47 | 0.050 | 35 | 34/36/34 | 0.76x | 6.0 (12.2) |
+| 52 | 0.062 | 37 | 34/37/34 | 0.80x | 6.8 (9.3) |
+| 153 | 0.99 | 136 | 135/136/135 | 0.99x | 1.6 |
+| 402 | 30.0 | 401 | 402/405/398 | 1.00x | 0.9 |
+
+**Between and beyond the anchors (interpolated, not measured):**
+- Near black, an input on the same v2 output step as an anchor sends that anchor's codes.
+- Below input 31 (under the meter's floor), v2's codes, capped at anchor 31's: blue 29 from input 26.
+- From 52 to 153, offsets go from -3/0/-3 to -1/0/-1, interpolated in log luminance. 0.07-1 nit is the least
+  certain range.
+- Above 402, anchor 402's offsets are held, +1/+4/-3: the whole-scale magenta lean, corrected to the top without a
+  measurement above 30 nits.
+- v2 sends one code low across its identity range (402 -> 401; the `i/1023` landmine). v3 builds on the codes v2
+  actually sends and stores every output as code + 0.25, so it does not carry the landmine.
+
+Profiles: `profiles/AW3225QF TB400 grey D65 v3 provisional.icc`, with the HDR Calibration matrix (its saturation),
+and `... (neutral).icc`, identity matrix. Both send the same codes. Not installed; installing needs a go.
+
+**Next:**
+1. BevelTipDrip looks at greys on screen. Installing needs a go.
+2. A verify run, T-NT4: the anchor inputs plus the interpolated ranges, with v3 as the HDR profile.
+3. The missing anchors, then a rebuild.

@@ -17,3 +17,13 @@ jobs:
           python-version: '3.12'
       - name: tools/ddc unit tests
         run: python -m unittest discover -v -s tools/ddc/tests -t tools
+
+  profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: tools/tests (build_mhc2.py) unit tests
+        run: python -m unittest discover -v -s tools/tests -t tools
