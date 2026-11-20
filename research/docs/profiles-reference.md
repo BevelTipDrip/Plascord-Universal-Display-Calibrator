@@ -102,3 +102,13 @@ the monitor on `\\.\DISPLAY17`. The System log has no PnP add or remove for the 
 transitions (Kernel-Power 566) at 15:08-15:09 and 18:38-18:51; the latter match the DDC wake/sleep tests on
 feature/ddc-module. Not known which transition, if any, dropped it. Candidate: display power cycles, which tie
 in with Q-3.
+
+**Restored by CRU `restart64.exe` again** (run by BevelTipDrip, 2026-11-19: "running restart64.exe worked again, so
+something about the deep reset of the graphics driver CRU does seems to fix it"). Afterwards:
+- The output is renamed `\\.\DISPLAY33` (it was 17; each restart adds 16), and the monitor is listed under it again,
+  the same instance UID4353.
+- `set_hdr_profile.py --show` works again: the HDR default is the neutral measuring profile, and the SDR entry is
+  Dell's `Alienware_AW3225QF_HDR True Black 400.icm`.
+- DDC/CI lists the monitor on `\\.\DISPLAY33`.
+
+Two out of two recoveries came from the full GPU restart, not from Windows' own driver reset or a re-plug.
